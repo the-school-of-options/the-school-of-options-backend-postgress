@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import dotenv from "dotenv";
 import { initDB } from "./config/database";
 import newsLetterRouter from "./routes/newsletter.route";
@@ -10,6 +11,20 @@ async function main() {
   await initDB();
 
   const app = express();
+  
+  // CORS configuration
+  app.use(cors({
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3001', 
+      'https://theschoolofoptions.com',
+      'https://www.theschoolofoptions.com',
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  }));
+
   app.use(express.json({ limit: "2mb" }));
 
   app.get("/api/v1/health", (_, res) => res.send("OK"));
