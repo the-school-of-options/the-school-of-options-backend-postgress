@@ -1,10 +1,13 @@
-import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
-const client = new SESv2Client({ region: process.env.AWS_REGION });
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.sendSesBulkPlain = sendSesBulkPlain;
+const client_sesv2_1 = require("@aws-sdk/client-sesv2");
+const client = new client_sesv2_1.SESv2Client({ region: process.env.AWS_REGION });
 const SENDER = process.env.SES_SENDER_ADDRESS;
 const CONFIG_SET = process.env.SES_CONFIGURATION_SET;
-export async function sendSesBulkPlain(toEmails, subject, htmlBody, textBody) {
+async function sendSesBulkPlain(toEmails, subject, htmlBody, textBody) {
     const emailPromises = toEmails.map(async (email) => {
-        const command = new SendEmailCommand({
+        const command = new client_sesv2_1.SendEmailCommand({
             FromEmailAddress: SENDER,
             Destination: {
                 ToAddresses: [email],

@@ -1,11 +1,13 @@
-import { Router } from "express";
-import { AppDataSource } from "../config/database.js";
-import { Webinar } from "../entities/webinar.entity.js";
-const webinarRouter = Router();
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const database_js_1 = require("../config/database.js");
+const webinar_entity_js_1 = require("../entities/webinar.entity.js");
+const webinarRouter = (0, express_1.Router)();
 webinarRouter.post("/register", async (req, res) => {
     try {
         const { email, name, webinarLink, source, preferedLanguage } = req.body;
-        const repo = AppDataSource.getRepository(Webinar);
+        const repo = database_js_1.AppDataSource.getRepository(webinar_entity_js_1.Webinar);
         const webinar = await repo.create({
             email,
             name,
@@ -22,4 +24,4 @@ webinarRouter.post("/register", async (req, res) => {
             .json({ ok: false, error: err?.message || "registered_failed" });
     }
 });
-export default webinarRouter;
+exports.default = webinarRouter;

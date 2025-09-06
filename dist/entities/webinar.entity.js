@@ -1,3 +1,4 @@
+"use strict";
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -7,32 +8,35 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, } from "typeorm";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Webinar = void 0;
+const typeorm_1 = require("typeorm");
 let Webinar = class Webinar {
 };
+exports.Webinar = Webinar;
 __decorate([
-    PrimaryGeneratedColumn("uuid"),
+    (0, typeorm_1.PrimaryGeneratedColumn)("uuid"),
     __metadata("design:type", String)
 ], Webinar.prototype, "id", void 0);
 __decorate([
-    Index(),
-    Column({ type: "varchar", length: 320 }),
+    (0, typeorm_1.Index)(),
+    (0, typeorm_1.Column)({ type: "varchar", length: 320 }),
     __metadata("design:type", String)
 ], Webinar.prototype, "email", void 0);
 __decorate([
-    Column({ type: "varchar", length: 160, nullable: true }),
+    (0, typeorm_1.Column)({ type: "varchar", length: 160, nullable: true }),
     __metadata("design:type", Object)
 ], Webinar.prototype, "name", void 0);
 __decorate([
-    Column({ type: "varchar", length: 2083, nullable: true }),
+    (0, typeorm_1.Column)({ type: "varchar", length: 2083, nullable: true }),
     __metadata("design:type", Object)
 ], Webinar.prototype, "webinarLink", void 0);
 __decorate([
-    Column({ type: "varchar", length: 100, nullable: true }),
+    (0, typeorm_1.Column)({ type: "varchar", length: 100, nullable: true }),
     __metadata("design:type", Object)
 ], Webinar.prototype, "source", void 0);
 __decorate([
-    Column({
+    (0, typeorm_1.Column)({
         type: "enum",
         enum: ["english", "hindi"],
         nullable: true,
@@ -40,14 +44,13 @@ __decorate([
     __metadata("design:type", Object)
 ], Webinar.prototype, "preferedLanguage", void 0);
 __decorate([
-    CreateDateColumn(),
+    (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
 ], Webinar.prototype, "createdAt", void 0);
 __decorate([
-    UpdateDateColumn(),
+    (0, typeorm_1.UpdateDateColumn)(),
     __metadata("design:type", Date)
 ], Webinar.prototype, "updatedAt", void 0);
-Webinar = __decorate([
-    Entity("webinars")
+exports.Webinar = Webinar = __decorate([
+    (0, typeorm_1.Entity)("webinars")
 ], Webinar);
-export { Webinar };

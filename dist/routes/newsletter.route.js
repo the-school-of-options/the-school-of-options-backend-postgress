@@ -1,13 +1,15 @@
-import { Router } from 'express';
-import { AppDataSource } from '../config/database.js';
-import { createAndStartCampaign, listSubscribers } from '../services/listmonk.service';
-import { sendSesBulkPlain } from '../services/ses.service';
-import { User } from '../entities/user.entity';
-const newsLetterRouter = Router();
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const database_js_1 = require("../config/database.js");
+const listmonk_service_1 = require("../services/listmonk.service");
+const ses_service_1 = require("../services/ses.service");
+const user_entity_1 = require("../entities/user.entity");
+const newsLetterRouter = (0, express_1.Router)();
 newsLetterRouter.post('/subscribe', async (req, res) => {
     try {
         const { email } = req.body;
-        const repo = AppDataSource.getRepository(User);
+        const repo = database_js_1.AppDataSource.getRepository(user_entity_1.User);
         let user = await repo.findOne({ where: { email } });
         if (user) {
             res.status(400).json({ ok: false, error: 'already_subscribed' });
@@ -35,7 +37,7 @@ newsLetterRouter.get('/subscribers', async (req, res) => {
     try {
         const page = Number(req.query.page || 1);
         const limit = Number(req.query.limit || 50);
-        const data = await listSubscribers(limit, page);
+        const data = await (0, listmonk_service_1.listSubscribers)(limit, page);
         res.json({ ok: true, data });
     }
     catch (err) {
@@ -46,7 +48,7 @@ newsLetterRouter.get('/subscribers', async (req, res) => {
 newsLetterRouter.post('/campaign/listmonk', async (req, res) => {
     try {
         const { title, subject, html } = req.body; // no validation
-        const result = await createAndStartCampaign(title, subject, html);
+        const result = await (0, listmonk_service_1.createAndStartCampaign)(title, subject, html);
         res.json({ ok: true, ...result });
     }
     catch (err) {
@@ -57,11 +59,11 @@ newsLetterRouter.post('/campaign/listmonk', async (req, res) => {
 newsLetterRouter.post('/campaign/ses-bulk', async (req, res) => {
     try {
         const { toEmails, subject, html, text } = req.body; // no validation
-        const result = await sendSesBulkPlain(toEmails || [], subject, html, text);
+        const result = await (0, ses_service_1.sendSesBulkPlain)(toEmails || [], subject, html, text);
         res.json({ ok: true, result });
     }
     catch (err) {
         res.status(500).json({ ok: false, error: err?.message || 'ses_bulk_failed' });
     }
 });
-export default newsLetterRouter;
+exports.default = newsLetterRouter;
