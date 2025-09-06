@@ -14,7 +14,7 @@ const ssl =
 
 export const AppDataSource = new DataSource({
   type: "postgres",
-  host: "theschoolofoptionsdatabase.cpm0s28o0c5k.ap-south-1.rds.amazonaws.com",
+  host: "theschoolofoptionsdatbase.cpm0s28o0c5k.ap-south-1.rds.amazonaws.com",
   port: 5432,
   username: "postgres",
   password: "TotalProfit1!",
