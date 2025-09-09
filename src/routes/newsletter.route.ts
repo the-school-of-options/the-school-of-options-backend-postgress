@@ -2,14 +2,14 @@ import { Router } from 'express';
 import { AppDataSource } from '../config/database.js';
 import { createAndStartCampaign, listSubscribers, upsertSubscriber } from '../services/listmonk.service';
 import { sendSesBulkPlain } from '../services/ses.service';
-import { User } from '../entities/user.entity';
+import { Subscribers } from '../entities/subscriber.entity.js';
 
 const newsLetterRouter = Router();
 
 newsLetterRouter.post('/subscribe', async (req, res) => {
   try {
     const { email } = req.body;
-    const repo = AppDataSource.getRepository(User);
+    const repo = AppDataSource.getRepository(Subscribers);
     let user = await repo.findOne({ where: { email } });
 
     if(user) {
@@ -23,11 +23,8 @@ newsLetterRouter.post('/subscribe', async (req, res) => {
       await repo.save(user);
     } else {
       user.subscribed = true;
-    //   user.name = name ?? user.name;
       await repo.save(user);
     }
-
-    // await upsertSubscriber(email);
 
     res.json({ ok: true, user });
   } catch (err: any) {
@@ -58,10 +55,9 @@ newsLetterRouter.post('/campaign/listmonk', async (req, res) => {
   }
 });
 
-// 4) Direct bulk send via SES (optional path)
 newsLetterRouter.post('/campaign/ses-bulk', async (req, res) => {
   try {
-    const { toEmails, subject, html, text } = req.body; // no validation
+    const { toEmails, subject, html, text } = req.body; 
     const result = await sendSesBulkPlain(toEmails || [], subject, html, text);
     res.json({ ok: true, result });
   } catch (err: any) {
