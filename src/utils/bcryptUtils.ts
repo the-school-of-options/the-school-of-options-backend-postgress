@@ -16,6 +16,7 @@ export const createToken = (
 ) => {
   const payload = { userId, email };
   const options = { expiresIn: expiry };
+  //@ts-ignore
   return jwt.sign(payload, secretKey, options);
 };
 export const decodeTokenPayload = (
