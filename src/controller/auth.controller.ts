@@ -24,6 +24,10 @@ const signUp = async (req: Request, res: Response) => {
       });
     }
 
+    const existingUser = await userService.getUserByEmail(email);
+    if(existingUser){
+      res.status(400).json({ error: "Email is already registered. Please log in." });
+    }
     const cognitoUserId = await authService.createUserInCognito(
       email,
       password
