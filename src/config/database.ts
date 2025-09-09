@@ -3,6 +3,7 @@ import { DataSource } from "typeorm";
 import dotenv from "dotenv";
 import { Subscribers } from "../entities/subscriber.entity";
 import { Webinar } from "../entities/webinar.entity";
+import { User } from "../entities/user.entity";
 dotenv.config();
 
 const ssl =
@@ -19,7 +20,7 @@ export const AppDataSource = new DataSource({
   username: "postgres",
   password: "TotalProfit1!",
   database: "theschoolofoptions",
-  entities: [Subscribers, Webinar],
+  entities: [Subscribers, Webinar, User],
   synchronize: true,
   logging: false,
   ssl,

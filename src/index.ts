@@ -4,7 +4,8 @@ import dotenv from "dotenv";
 import { initDB } from "./config/database";
 import newsLetterRouter from "./routes/newsletter.route";
 import webinarRouter from "./routes/webinar.route";
-
+import authRouter from "./routes/auth.route";
+import otpRouter from "./routes/otp.route";
 dotenv.config();
 
 async function main() {
@@ -30,8 +31,10 @@ async function main() {
   app.get("/api/v1/health", (_, res) => res.send("OK"));
   app.use("/api/v1/newsletter", newsLetterRouter);
   app.use("/api/v1/webinar", webinarRouter);
+  app.use("/api/v1/auth", authRouter);
+  app.use("/api/v1/otp", otpRouter);
 
-  const port = Number(process.env.PORT || 3000);
+  const port = Number(process.env.PORT || 8000);
   app.listen(port, () => {
     console.log(`the-school-of-options API running on :${port}`);
   });
