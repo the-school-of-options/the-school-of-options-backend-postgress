@@ -47,11 +47,14 @@ export async function addSubscriberToList(
 ) {
   try {
     const response = await client.put("/api/subscribers/lists", {
-      ids: [subscriberId], 
-      action: "add", 
-      target_list_ids: [listId], 
-      status: "confirmed", 
+      ids: [subscriberId],
+      action: "add",
+      target_list_ids: [listId],
+      status: "confirmed",
     });
+
+    console.log("bbbbbbbbbc", response.data);
+
     return response.data;
   } catch (err: any) {
     console.error(
@@ -78,7 +81,6 @@ export async function upsertSubscriber(
   try {
     // Check if subscriber already exists
     const existingSubscriber = await getSubscriberByEmail(email);
-
 
     if (existingSubscriber) {
       if (listId) {
@@ -110,6 +112,7 @@ export async function upsertSubscriber(
         name: name || "",
         status: "enabled",
         lists: listIds,
+        preconfirm_subscriptions: true,
       });
 
       return response.data;
