@@ -9,6 +9,8 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const database_1 = require("./config/database");
 const newsletter_route_1 = __importDefault(require("./routes/newsletter.route"));
 const webinar_route_1 = __importDefault(require("./routes/webinar.route"));
+const auth_route_1 = __importDefault(require("./routes/auth.route"));
+const otp_route_1 = __importDefault(require("./routes/otp.route"));
 dotenv_1.default.config();
 async function main() {
     await (0, database_1.initDB)();
@@ -20,6 +22,7 @@ async function main() {
             'http://localhost:3001',
             'https://theschoolofoptions.com',
             'https://www.theschoolofoptions.com',
+            'https://dev.theschoolofoptions.com',
         ],
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -29,7 +32,9 @@ async function main() {
     app.get("/api/v1/health", (_, res) => res.send("OK"));
     app.use("/api/v1/newsletter", newsletter_route_1.default);
     app.use("/api/v1/webinar", webinar_route_1.default);
-    const port = Number(process.env.PORT || 3000);
+    app.use("/api/v1/auth", auth_route_1.default);
+    app.use("/api/v1/otp", otp_route_1.default);
+    const port = Number(process.env.PORT || 8000);
     app.listen(port, () => {
         console.log(`the-school-of-options API running on :${port}`);
     });

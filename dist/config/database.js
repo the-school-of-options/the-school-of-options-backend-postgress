@@ -8,13 +8,13 @@ exports.initDB = initDB;
 require("reflect-metadata");
 const typeorm_1 = require("typeorm");
 const dotenv_1 = __importDefault(require("dotenv"));
-const user_entity_1 = require("../entities/user.entity");
+const subscriber_entity_1 = require("../entities/subscriber.entity");
 const webinar_entity_1 = require("../entities/webinar.entity");
+const user_entity_1 = require("../entities/user.entity");
 dotenv_1.default.config();
 const ssl = process.env.DB_SSL === "false"
     ? undefined
-    : // For RDS: you can start with rejectUnauthorized:false.
-        // Later, switch to proper CA bundle for stronger security.
+    :
         { rejectUnauthorized: false };
 exports.AppDataSource = new typeorm_1.DataSource({
     type: "postgres",
@@ -23,7 +23,7 @@ exports.AppDataSource = new typeorm_1.DataSource({
     username: "postgres",
     password: "TotalProfit1!",
     database: "theschoolofoptions",
-    entities: [user_entity_1.User, webinar_entity_1.Webinar],
+    entities: [subscriber_entity_1.Subscribers, webinar_entity_1.Webinar, user_entity_1.User],
     synchronize: true,
     logging: false,
     ssl,

@@ -1,58 +1,150 @@
-import axios from 'axios';
-
-const baseURL = process.env.LISTMONK_BASE_URL!;
-const username = process.env.LISTMONK_USERNAME!;
-const password = process.env.LISTMONK_PASSWORD!;
-const listId = Number(process.env.LISTMONK_LIST_ID || 1);
+import axios from "axios";
 
 const client = axios.create({
-  baseURL,
-  auth: { username, password }
+  baseURL: "https://mail.theschoolofoptions.com",
+  headers: { "Content-Type": "application/json" },
+  auth: {
+    username: "tech-atomclass-api",
+    password: "6DJKSXqcY788i10pt8AZIwGDyYL8tLZn",
+  },
 });
 
-// Create or update a subscriber and subscribe to list
-export async function upsertSubscriber(email: string, name?: string | null) {
-  // Try to upsert (Listmonk has PUT /api/subscribers)
+export async function getAllLists() {
   try {
-    const res = await client.post('/api/subscribers', {
-      email,
-      name,
-      status: 'enabled',
-      lists: [listId]
-    });
-    return res.data;
+    const response = await client.get("/api/lists");
+    return response.data.data.results;
   } catch (err: any) {
-    // If already exists, attach to list
-    if (err?.response?.status === 409) {
-      const subRes = await client.get('/api/subscribers', { params: { query: email }});
-      const id = subRes.data?.data?.results?.[0]?.id;
-      if (id) {
-        await client.post(`/api/lists/${listId}/subscribers`, { subscribers: [id] });
-        return { id, email, name };
-      }
-    }
-    throw err;
+    console.error("Error fetching lists:", err?.response?.data || err?.message);
+    throw new Error(
+      `Failed to fetch lists: ${err?.response?.data?.message || err?.message}`
+    );
   }
 }
 
-export async function listSubscribers(limit = 50, page = 1) {
-  const res = await client.get('/api/subscribers', { params: { page, per_page: limit }});
-  return res.data;
+export async function getSubscriberByEmail(email: string) {
+  try {
+    const response = await client.get(
+      `/api/subscribers?query=subscribers.email='${email}'`
+    );
+    const subscribers = response.data.data.results;
+
+    return subscribers.length > 0 ? subscribers[0] : null;
+  } catch (err: any) {
+    if (err?.response?.status === 404) {
+      return null;
+    }
+    console.error(
+      "Error checking subscriber:",
+      err?.response?.data || err?.message
+    );
+    return null;
+  }
 }
 
-// Create & start a campaign in Listmonk (uses Listmonk's sending pipeline)
-// NOTE: Ensure Listmonk is configured to use SES SMTP.
-export async function createAndStartCampaign(title: string, subject: string, bodyHtml: string) {
-  const createRes = await client.post('/api/campaigns', {
-    name: title,
-    subject,
-    lists: [{ id: listId, type: 'include' }],
-    type: 'regular',
-    content_type: 'html',
-    body: bodyHtml
-  });
+export async function addSubscriberToList(
+  subscriberId: number,
+  listId: number
+) {
+  try {
+    const response = await client.put("/api/subscribers/lists", {
+      ids: [subscriberId], 
+      action: "add", 
+      target_list_ids: [listId], 
+      status: "confirmed", 
+    });
+    return response.data;
+  } catch (err: any) {
+    console.error(
+      "Error adding subscriber to list:",
+      err?.response?.data || err?.message
+    );
+    throw new Error(
+      `Failed to add to list: ${err?.response?.data?.message || err?.message}`
+    );
+  }
+}
 
-  const campaignId = createRes.data?.data?.id ?? createRes.data?.id;
-  await client.put(`/api/campaigns/${campaignId}/status`, { status: 'running' });
-  return { campaignId };
+/**
+ * Upsert subscriber with conditional list assignment
+ * @param email - Subscriber email
+ * @param name - Subscriber name (optional)
+ * @param listId - Specific list ID (if provided) or null for all lists
+ */
+export async function upsertSubscriber(
+  email: string,
+  name?: string | null,
+  listId?: number | null
+) {
+  try {
+    // Check if subscriber already exists
+    const existingSubscriber = await getSubscriberByEmail(email);
+
+    console.log("existingSubcriber", existingSubscriber);
+
+    if (existingSubscriber) {
+      console.log("Subscriber exists, updating lists...");
+
+      if (listId) {
+        await addSubscriberToList(existingSubscriber.id, listId);
+        console.log(`Added existing subscriber to list ${listId}`);
+      } else {
+        console.log("baba");
+        const allLists = await getAllLists();
+        console.log("allList", allLists);
+        for (const list of allLists) {
+          try {
+            await addSubscriberToList(existingSubscriber.id, list.id);
+          } catch (err) {
+            // Continue if subscriber already in this list
+            console.log(`Subscriber might already be in list ${list.id}`);
+          }
+        }
+        console.log("Added existing subscriber to all lists");
+      }
+
+      return existingSubscriber;
+    } else {
+      let listIds: number[] = [];
+
+      if (listId) {
+        listIds = [listId];
+      } else {
+        const allLists = await getAllLists();
+        listIds = allLists.map((list: any) => list.id);
+        console.log("Adding to all lists:", listIds);
+      }
+
+      const response = await client.post("/api/subscribers", {
+        email,
+        name: name || "",
+        status: "enabled",
+        lists: listIds,
+      });
+
+      console.log("New subscriber created:", response.data);
+      return response.data;
+    }
+  } catch (err: any) {
+    console.error("Listmonk error details:", {
+      status: err?.response?.status,
+      data: err?.response?.data,
+      message: err?.message,
+    });
+
+    throw new Error(
+      `Listmonk sync failed: ${err?.response?.data?.message || err?.message}`
+    );
+  }
+}
+
+export async function addToSpecificList(
+  email: string,
+  name?: string | null,
+  listId?: number
+) {
+  return await upsertSubscriber(email, name, listId);
+}
+
+export async function addToAllLists(email: string, name?: string | null) {
+  return await upsertSubscriber(email, name, null);
 }

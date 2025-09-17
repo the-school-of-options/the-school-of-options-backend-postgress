@@ -73,4 +73,30 @@ export class EmailService {
       };
     }
   }
+
+  static async sendWelcomeToNewsLetter(
+    email: string,
+  ) {
+    try {
+      await AWSUtils.sendEmail(
+        "hello@theschoolofoptions.com", 
+        [email], 
+        "NewsletterWelcome", 
+        {
+          email,
+        }
+      );
+      return {
+        success: true,
+        message: "News Letter Subcribed SuccessFully",
+      };
+    } catch (error: any) {
+      console.error("Failed to News Letter Subcribed email:", error);
+      return {
+        success: false,
+        message: "Failed to News Letter Subcribed email",
+        error,
+      };
+    }
+  }
 }

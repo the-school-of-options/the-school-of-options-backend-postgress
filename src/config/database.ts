@@ -9,8 +9,7 @@ dotenv.config();
 const ssl =
   process.env.DB_SSL === "false"
     ? undefined
-    : // For RDS: you can start with rejectUnauthorized:false.
-      // Later, switch to proper CA bundle for stronger security.
+    : 
       { rejectUnauthorized: false };
 
 export const AppDataSource = new DataSource({
@@ -25,6 +24,7 @@ export const AppDataSource = new DataSource({
   logging: false,
   ssl,
 });
+
 
 export async function initDB() {
   if (!AppDataSource.isInitialized) {
