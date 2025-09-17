@@ -421,4 +421,98 @@ Support: hello@theschoolofoptions.com
 © ${new Date().getFullYear()} The School of Options. All rights reserved.
 `,
   },
+  WEBINAR_REGISTRATION_THANK_YOU: {
+    TemplateName: "WebinarRegistrationThankYou",
+    SubjectPart: "You're in! {{webinarName}} — thanks for registering 🎉",
+    HtmlPart: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Webinar Registration Confirmed</title>
+  <style>
+    body { margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f3f5f9; min-height:100vh; padding:20px; box-sizing:border-box; }
+    .email-container { max-width:600px; margin:0 auto; background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,0.08); }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; padding:36px 24px; text-align:center; }
+    .header h1 { margin:0; font-size:26px; font-weight:700; letter-spacing:0.3px; }
+    .sub { margin-top:6px; opacity:0.95; font-size:14px; }
+    .content { padding:32px 28px; line-height:1.6; color:#343a40; }
+    .greeting { font-size:18px; margin-bottom:14px; font-weight:600; }
+    .box { background:#f8fafc; border:1px solid #eef2f7; border-radius:12px; padding:18px; margin:22px 0; }
+    .row { display:flex; justify-content:space-between; gap:12px; margin:10px 0; }
+    .label { color:#6c757d; font-size:13px; }
+    .value { font-weight:600; font-size:15px; color:#111827; }
+    .note { font-size:14px; color:#4b5563; margin-top:16px; }
+    .footer { text-align:center; padding:22px; color:#6c757d; font-size:13px; border-top:1px solid #eef2f7; background:#fafbff; }
+    .social a { display:inline-block; margin:0 10px; color:#667eea; text-decoration:none; font-size:14px; }
+    .brand { color:#667eea; font-weight:700; }
+  </style>
+</head>
+<body>
+  <div class="email-container" role="article" aria-label="Webinar Registration Confirmation">
+    <div class="header">
+      <h1>{{webinarName}}</h1>
+      <div class="sub">Registration confirmed</div>
+    </div>
+
+    <div class="content">
+      <div class="greeting">Hi {{fullName}} 👋</div>
+      <p>Thank you so much for registering for <strong>{{webinarName}}</strong>! 🎉</p>
+
+      <p class="note">
+        You’ll receive the webinar link shortly at <strong>{{email}}</strong>. If it doesn’t arrive soon,
+        please check your spam/promotions folder.
+      </p>
+
+      <div class="box" aria-label="Registration details">
+        <div class="row">
+          <div class="label">Attendee</div>
+          <div class="value">{{fullName}}</div>
+        </div>
+        <div class="row">
+          <div class="label">Email</div>
+          <div class="value">{{email}}</div>
+        </div>
+        <div class="row">
+          <div class="label">Phone</div>
+          <div class="value">{{phoneNumber}}</div>
+        </div>
+      </div>
+
+      <p class="note">
+        Need help or want to update your registration? Reply to this email or write to
+        <a href="mailto:hello@theschoolofoptions.com">hello@theschoolofoptions.com</a>.
+      </p>
+
+      <p class="note">— <span class="brand">The School of Options Team</span></p>
+    </div>
+
+    <div class="footer">
+      <div class="social">
+        <a href="https://theschoolofoptions.com">🌐 Website</a>
+        <a href="mailto:hello@theschoolofoptions.com">✉️ Support</a>
+      </div>
+      <p>&copy; ${new Date().getFullYear()} The School of Options. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>`,
+    TextPart: `
+Hi {{fullName}},
+
+Thanks for registering for {{webinarName}}! 🎉
+You’ll receive the webinar link shortly at {{email}}.
+
+Registration Details
+• Name: {{fullName}}
+• Email: {{email}}
+• Phone: {{phoneNumber}}
+
+Need help? Email hello@theschoolofoptions.com.
+
+— The School of Options Team
+© ${new Date().getFullYear()} The School of Options. All rights reserved.
+`,
+  },
 };

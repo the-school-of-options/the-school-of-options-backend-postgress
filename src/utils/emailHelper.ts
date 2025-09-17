@@ -1,4 +1,3 @@
-
 import { AWSUtils } from "./aws";
 
 export class EmailService {
@@ -51,9 +50,9 @@ export class EmailService {
   ) {
     try {
       await AWSUtils.sendEmail(
-        "hello@theschoolofoptions.com", 
-        ["hello@theschoolofoptions.com"], 
-        "CounsellorRequest", 
+        "hello@theschoolofoptions.com",
+        ["hello@theschoolofoptions.com"],
+        "CounsellorRequest",
         {
           fullName: name,
           email,
@@ -74,16 +73,46 @@ export class EmailService {
     }
   }
 
-  static async sendWelcomeToNewsLetter(
+  static async sendWelcomeToNewsLetter(email: string) {
+    try {
+      await AWSUtils.sendEmail(
+        "hello@theschoolofoptions.com",
+        [email],
+        "NewsletterWelcome",
+        {
+          email,
+        }
+      );
+      return {
+        success: true,
+        message: "News Letter Subcribed SuccessFully",
+      };
+    } catch (error: any) {
+      console.error("Failed to News Letter Subcribed email:", error);
+      return {
+        success: false,
+        message: "Failed to News Letter Subcribed email",
+        error,
+      };
+    }
+  }
+
+  static async sendWelcomeToWebinar(
     email: string,
+    fullName: string,
+    phoneNumber: string,
+    webinarName: string
   ) {
     try {
       await AWSUtils.sendEmail(
-        "hello@theschoolofoptions.com", 
-        [email], 
-        "NewsletterWelcome", 
+        "hello@theschoolofoptions.com",
+        [email],
+        "WebinarRegistrationThankYou",
         {
           email,
+          fullName,
+          phoneNumber,
+          webinarName,
         }
       );
       return {

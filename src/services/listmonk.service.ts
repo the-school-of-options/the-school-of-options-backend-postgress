@@ -79,27 +79,19 @@ export async function upsertSubscriber(
     // Check if subscriber already exists
     const existingSubscriber = await getSubscriberByEmail(email);
 
-    console.log("existingSubcriber", existingSubscriber);
 
     if (existingSubscriber) {
-      console.log("Subscriber exists, updating lists...");
-
       if (listId) {
         await addSubscriberToList(existingSubscriber.id, listId);
-        console.log(`Added existing subscriber to list ${listId}`);
       } else {
-        console.log("baba");
         const allLists = await getAllLists();
-        console.log("allList", allLists);
         for (const list of allLists) {
           try {
             await addSubscriberToList(existingSubscriber.id, list.id);
           } catch (err) {
             // Continue if subscriber already in this list
-            console.log(`Subscriber might already be in list ${list.id}`);
           }
         }
-        console.log("Added existing subscriber to all lists");
       }
 
       return existingSubscriber;
@@ -111,7 +103,6 @@ export async function upsertSubscriber(
       } else {
         const allLists = await getAllLists();
         listIds = allLists.map((list: any) => list.id);
-        console.log("Adding to all lists:", listIds);
       }
 
       const response = await client.post("/api/subscribers", {
@@ -121,7 +112,6 @@ export async function upsertSubscriber(
         lists: listIds,
       });
 
-      console.log("New subscriber created:", response.data);
       return response.data;
     }
   } catch (err: any) {

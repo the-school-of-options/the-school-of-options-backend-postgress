@@ -17,10 +17,13 @@ export class Webinar {
   email!: string;
 
   @Column({ type: "varchar", length: 160, nullable: true })
-  name!: string | null;
+  fullName!: string | null;
 
-  @Column({ type: "varchar", length: 2083, nullable: true })
-  webinarLink!: string | null;
+  @Column({ type: "varchar", length: 360, nullable: true })
+  webinarName!: string | null;
+
+  @Column({ type: "varchar", length: 15, nullable: true })
+  phoneNumber!: string | null;
 
   // @Column({ type: "varchar", length: 50, nullable: true })
   // phoneNumber!: string | null;
@@ -28,12 +31,6 @@ export class Webinar {
   @Column({ type: "varchar", length: 100, nullable: true })
   source!: string | null;
 
-  @Column({
-    type: "enum",
-    enum: ["english", "hindi"],
-    nullable: true,
-  })
-  preferedLanguage!: "english" | "hindi" | null;
 
   @CreateDateColumn()
   createdAt!: Date;
