@@ -15,7 +15,7 @@ const client = axios_1.default.create({
     headers: { "Content-Type": "application/json" },
     auth: {
         username: "tech-atomclass-api",
-        password: "tech-atomclass-api"
+        password: "6DJKSXqcY788i10pt8AZIwGDyYL8tLZn",
     },
 });
 async function getAllLists() {
@@ -42,16 +42,15 @@ async function getSubscriberByEmail(email) {
         return null;
     }
 }
-/**
- * Add existing subscriber to specific list
- */
 async function addSubscriberToList(subscriberId, listId) {
     try {
-        const response = await client.put(`/api/subscribers/${subscriberId}/lists`, {
-            ids: [listId],
+        const response = await client.put("/api/subscribers/lists", {
+            ids: [subscriberId],
             action: "add",
+            target_list_ids: [listId],
             status: "confirmed",
         });
+        console.log("bbbbbbbbbc", response.data);
         return response.data;
     }
     catch (err) {
@@ -67,12 +66,11 @@ async function addSubscriberToList(subscriberId, listId) {
  */
 async function upsertSubscriber(email, name, listId) {
     try {
+        // Check if subscriber already exists
         const existingSubscriber = await getSubscriberByEmail(email);
         if (existingSubscriber) {
-            console.log("Subscriber exists, updating lists...");
             if (listId) {
                 await addSubscriberToList(existingSubscriber.id, listId);
-                console.log(`Added existing subscriber to list ${listId}`);
             }
             else {
                 const allLists = await getAllLists();
@@ -81,10 +79,9 @@ async function upsertSubscriber(email, name, listId) {
                         await addSubscriberToList(existingSubscriber.id, list.id);
                     }
                     catch (err) {
-                        console.log(`Subscriber might already be in list ${list.id}`);
+                        // Continue if subscriber already in this list
                     }
                 }
-                console.log("Added existing subscriber to all lists");
             }
             return existingSubscriber;
         }
@@ -96,18 +93,14 @@ async function upsertSubscriber(email, name, listId) {
             else {
                 const allLists = await getAllLists();
                 listIds = allLists.map((list) => list.id);
-                console.log("Adding to all lists:", listIds);
             }
             const response = await client.post("/api/subscribers", {
                 email,
                 name: name || "",
                 status: "enabled",
-                lists: listIds.map((id) => ({
-                    id: id,
-                    subscription_status: "confirmed",
-                })),
+                lists: listIds,
+                preconfirm_subscriptions: true,
             });
-            console.log("New subscriber created:", response.data);
             return response.data;
         }
     }
@@ -120,27 +113,9 @@ async function upsertSubscriber(email, name, listId) {
         throw new Error(`Listmonk sync failed: ${err?.response?.data?.message || err?.message}`);
     }
 }
-/**
- * Add subscriber to specific list (wrapper function)
- */
-async function addToSpecificList(email, listId, name) {
+async function addToSpecificList(email, name, listId) {
     return await upsertSubscriber(email, name, listId);
 }
-/**
- * Add subscriber to all lists (wrapper function)
- */
 async function addToAllLists(email, name) {
     return await upsertSubscriber(email, name, null);
 }
-// Example usage:
-/*
-// Add to specific list (when listId is provided)
-await addToSpecificList('user@example.com', 'John Doe', 1);
-
-// Add to all lists (when no listId is provided)
-await addToAllLists('user@example.com', 'Jane Doe');
-
-// Direct usage with conditional logic
-await upsertSubscriber('user@example.com', 'John Doe', 1); // Specific list
-await upsertSubscriber('user@example.com', 'John Doe'); // All lists
-*/

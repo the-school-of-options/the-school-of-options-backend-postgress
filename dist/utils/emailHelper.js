@@ -52,5 +52,46 @@ class EmailService {
             };
         }
     }
+    static async sendWelcomeToNewsLetter(email) {
+        try {
+            await aws_1.AWSUtils.sendEmail("hello@theschoolofoptions.com", [email], "NewsletterWelcome", {
+                email,
+            });
+            return {
+                success: true,
+                message: "News Letter Subcribed SuccessFully",
+            };
+        }
+        catch (error) {
+            console.error("Failed to News Letter Subcribed email:", error);
+            return {
+                success: false,
+                message: "Failed to News Letter Subcribed email",
+                error,
+            };
+        }
+    }
+    static async sendWelcomeToWebinar(email, fullName, phoneNumber, webinarName) {
+        try {
+            await aws_1.AWSUtils.sendEmail("hello@theschoolofoptions.com", [email], "WebinarRegistrationThankYou", {
+                email,
+                fullName,
+                phoneNumber,
+                webinarName,
+            });
+            return {
+                success: true,
+                message: "News Letter Subcribed SuccessFully",
+            };
+        }
+        catch (error) {
+            console.error("Failed to News Letter Subcribed email:", error);
+            return {
+                success: false,
+                message: "Failed to News Letter Subcribed email",
+                error,
+            };
+        }
+    }
 }
 exports.EmailService = EmailService;

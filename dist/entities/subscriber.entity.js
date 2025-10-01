@@ -32,6 +32,10 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Subscribers.prototype, "subscribed", void 0);
 __decorate([
+    (0, typeorm_1.Column)("simple-array", { default: "" }),
+    __metadata("design:type", Array)
+], Subscribers.prototype, "subscribedLists", void 0);
+__decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
 ], Subscribers.prototype, "createdAt", void 0);
