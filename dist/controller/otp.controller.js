@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.otpController = void 0;
 const otp_1 = require("../utils/otp");
@@ -6,6 +9,7 @@ const auth_service_1 = require("../services/auth.service");
 const database_1 = require("../config/database");
 const user_entity_1 = require("../entities/user.entity");
 const emailHelper_1 = require("../utils/emailHelper");
+const axios_1 = __importDefault(require("axios"));
 const userRepository = database_1.AppDataSource.getRepository(user_entity_1.User);
 const verifyOTP = async (req, res) => {
     const { email, otp, password } = req.body;
@@ -51,6 +55,30 @@ const verifyOTP = async (req, res) => {
         }
         await auth_service_1.authService.verifyUserEmail(user.cognitoId);
         const tokens = await auth_service_1.authService.loginUser(user.email, password);
+        // Send WhatsApp message if mobile number is provided
+        if (user.mobileNumber) {
+            try {
+                const sendWhatsapp = await axios_1.default.post('https://backend.aisensy.com/campaign/t1/api/v2', {
+                    apiKey: process.env.AI_SENSY_ACCESS_TOKEN,
+                    campaignName: process.env.AI_SENSY_CAMPAIGN_NAME,
+                    destination: user.mobileNumber,
+                    userName: user.fullName,
+                    templateParams: [],
+                    source: "new-landing-page form",
+                    media: {},
+                    buttons: [],
+                    carouselCards: [],
+                    location: {},
+                    attributes: {},
+                    paramsFallbackValue: {}
+                });
+                console.log('WhatsApp response:', sendWhatsapp.data);
+            }
+            catch (whatsappError) {
+                console.error('Failed to send WhatsApp message:', whatsappError);
+                // Don't fail the entire signup if WhatsApp fails
+            }
+        }
         res.json({
             message: "Email verified successfully",
             user: {

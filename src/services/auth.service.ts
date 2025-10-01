@@ -347,8 +347,6 @@ export const authService = {
         Username: username,
       });
 
-      console.log("User status before reset:", userDetails.UserStatus);
-
       await cognitoIdentityServiceProvider.adminSetUserPassword({
         UserPoolId: userPoolId,
         Username: username,
@@ -614,6 +612,108 @@ export const authService = {
       throw error;
     }
   },
+  addUserToCognitoGroup: async (username: string, groupName: string) => {
+    try {
+      await cognitoIdentityServiceProvider.adminAddUserToGroup({
+        UserPoolId: userPoolId,
+        Username: username,
+        GroupName: groupName,
+      });
+      console.log(`User ${username} added to group ${groupName}`);
+    } catch (error: any) {
+      console.error("Error adding user to group:", error);
+
+      if (error.code === "ResourceNotFoundException") {
+        throw new Error(`Group ${groupName} not found`);
+      }
+      if (error.code === "UserNotFoundException") {
+        throw new Error("User not found");
+      }
+      if (error.code === "TooManyRequestsException") {
+        throw new Error("Too many requests. Please try again later");
+      }
+
+      throw error;
+    }
+  },
+
+  removeUserFromCognitoGroup: async (username: string, groupName: string) => {
+    try {
+      await cognitoIdentityServiceProvider.adminRemoveUserFromGroup({
+        UserPoolId: userPoolId,
+        Username: username,
+        GroupName: groupName,
+      });
+      console.log(`User ${username} removed from group ${groupName}`);
+    } catch (error: any) {
+      console.error("Error removing user from group:", error);
+
+      if (error.code === "ResourceNotFoundException") {
+        throw new Error(`Group ${groupName} not found`);
+      }
+      if (error.code === "UserNotFoundException") {
+        throw new Error("User not found");
+      }
+      if (error.code === "TooManyRequestsException") {
+        throw new Error("Too many requests. Please try again later");
+      }
+
+      throw error;
+    }
+  },
+
+  syncUserRoleWithCognitoGroups: async (username: string, role: string) => {
+    try {
+      const groupsResponse = await cognitoIdentityServiceProvider.adminListGroupsForUser({
+        UserPoolId: userPoolId,
+        Username: username,
+      });
+
+      const currentGroups = groupsResponse.Groups?.map(g => g.GroupName) || [];
+      const targetGroup = role;
+
+      // Remove from all groups that don't match the target role
+      for (const group of currentGroups) {
+        if (group && group !== targetGroup) {
+          await authService.removeUserFromCognitoGroup(username, group);
+        }
+      }
+
+      // Add to target group if not already in it
+      if (!currentGroups.includes(targetGroup)) {
+        await authService.addUserToCognitoGroup(username, targetGroup);
+      }
+
+      console.log(`User ${username} synced to group ${targetGroup}`);
+    } catch (error: any) {
+      console.error("Error syncing user role with groups:", error);
+      throw error;
+    }
+  },
+
+  getUserRoleFromCognitoGroups: async (username: string): Promise<string | null> => {
+    try {
+      const groupsResponse = await cognitoIdentityServiceProvider.adminListGroupsForUser({
+        UserPoolId: userPoolId,
+        Username: username,
+      });
+
+      const groups = groupsResponse.Groups?.map(g => g.GroupName) || [];
+
+      // Priority: Super-Admin > User
+      if (groups.includes("Super-Admin")) {
+        return "Super-Admin";
+      } else if (groups.includes("User")) {
+        return "User";
+      }
+
+      return null;
+    } catch (error: any) {
+      console.error("Error getting user role from groups:", error);
+      return null;
+    }
+  },
+
   refreshTokens: async (
     userIdentifier: string,
     refreshToken: string

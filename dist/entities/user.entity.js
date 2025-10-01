@@ -13,8 +13,8 @@ exports.User = exports.OtpType = exports.UserRole = void 0;
 const typeorm_1 = require("typeorm");
 var UserRole;
 (function (UserRole) {
-    UserRole["ADMIN"] = "admin";
-    UserRole["USER"] = "user";
+    UserRole["SUPER_ADMIN"] = "Super-Admin";
+    UserRole["USER"] = "User";
 })(UserRole || (exports.UserRole = UserRole = {}));
 var OtpType;
 (function (OtpType) {
@@ -59,6 +59,8 @@ let User = class User {
             this.email = this.email.trim().toLowerCase();
         if (this.fullName)
             this.fullName = this.fullName.trim();
+        if (this.mobileNumber)
+            this.mobileNumber = this.mobileNumber.trim();
     }
 };
 exports.User = User;
@@ -80,6 +82,11 @@ __decorate([
     (0, typeorm_1.Column)({ type: "varchar", length: 100 }),
     __metadata("design:type", String)
 ], User.prototype, "fullName", void 0);
+__decorate([
+    (0, typeorm_1.Index)(),
+    (0, typeorm_1.Column)({ type: "varchar", length: 20, nullable: true }),
+    __metadata("design:type", Object)
+], User.prototype, "mobileNumber", void 0);
 __decorate([
     (0, typeorm_1.Index)(),
     (0, typeorm_1.Column)({ type: "varchar", length: 128, nullable: true }),

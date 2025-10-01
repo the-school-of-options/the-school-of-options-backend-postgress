@@ -4,6 +4,7 @@ import { authService } from "../services/auth.service";
 import { AppDataSource } from "../config/database";
 import { OtpType, User } from "../entities/user.entity";
 import { EmailService } from "../utils/emailHelper";
+import axios from "axios";
 
 const userRepository = AppDataSource.getRepository(User);
 
@@ -59,6 +60,30 @@ const verifyOTP = async (req: Request, res: Response) => {
     await authService.verifyUserEmail(user.cognitoId);
 
     const tokens = await authService.loginUser(user.email, password);
+
+      // Send WhatsApp message if mobile number is provided
+    if (user.mobileNumber) {
+      try {
+        const sendWhatsapp = await axios.post('https://backend.aisensy.com/campaign/t1/api/v2', {
+          apiKey: process.env.AI_SENSY_ACCESS_TOKEN!,
+          campaignName: process.env.AI_SENSY_CAMPAIGN_NAME! ,
+          destination: user.mobileNumber,
+          userName: user.fullName,
+          templateParams: [],
+          source: "new-landing-page form",
+          media: {},
+          buttons: [],
+          carouselCards: [],
+          location: {},
+          attributes: {},
+          paramsFallbackValue: {}
+        });
+        console.log('WhatsApp response:', sendWhatsapp.data);
+      } catch (whatsappError) {
+        console.error('Failed to send WhatsApp message:', whatsappError);
+        // Don't fail the entire signup if WhatsApp fails
+      }
+    }
 
     res.json({
       message: "Email verified successfully",

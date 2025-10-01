@@ -11,8 +11,8 @@ import {
 } from "typeorm";
 
 export enum UserRole {
-  ADMIN = "admin",
-  USER = "user",
+  SUPER_ADMIN = "Super-Admin",
+  USER = "User",
 }
 
 export enum OtpType {
@@ -50,11 +50,9 @@ class Otp {
 @Check("CHK_user_otp_attempts", '"otpAttempts" <= 5 OR "otpAttempts" IS NULL')
 @Entity({ name: "users" })
 export class User {
-  // => equivalent to Mongo's _id
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  // sparse unique: in Postgres, UNIQUE allows multiple NULLs
   @Index({ unique: true })
   @Column({ type: "varchar", length: 64, nullable: true, unique: true })
   cognitoId!: string | null;
@@ -65,6 +63,10 @@ export class User {
 
   @Column({ type: "varchar", length: 100 })
   fullName!: string;
+
+  @Index()
+  @Column({ type: "varchar", length: 20, nullable: true })
+  mobileNumber!: string | null;
 
   @Index()
   @Column({ type: "varchar", length: 128, nullable: true })
@@ -81,7 +83,6 @@ export class User {
   })
   role!: UserRole;
 
-  // Embedded subdocument — columns will be prefixed with "otp"
   @Column(() => Otp, { prefix: "otp" })
   otp?: Otp;
 
@@ -108,5 +109,6 @@ export class User {
   normalize() {
     if (this.email) this.email = this.email.trim().toLowerCase();
     if (this.fullName) this.fullName = this.fullName.trim();
+    if (this.mobileNumber) this.mobileNumber = this.mobileNumber.trim();
   }
 }

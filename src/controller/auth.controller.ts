@@ -11,11 +11,12 @@ import { OtpType, User, UserRole } from "../entities/user.entity";
 import { OTPService } from "../utils/otp";
 import { EmailService } from "../utils/emailHelper";
 import { AuthRequest } from "../types/authReq.types";
+import axios from "axios";
 
 const userRepository = AppDataSource.getRepository(User);
 
 const signUp = async (req: Request, res: Response) => {
-  const { email, password, fullName } = req.body;
+  const { email, password, fullName, mobileNumber, role } = req.body;
 
   try {
     if (!email || !password || !fullName) {
@@ -26,28 +27,42 @@ const signUp = async (req: Request, res: Response) => {
 
     const existingUser = await userService.getUserByEmail(email);
     if(existingUser){
-      res.status(400).json({ error: "Email is already registered. Please log in." });
+      return res.status(400).json({ error: "Email is already registered. Please log in." });
     }
     const cognitoUserId = await authService.createUserInCognito(
       email,
       password
     );
 
+    const userRole = role && role === UserRole.SUPER_ADMIN ? UserRole.SUPER_ADMIN : UserRole.USER;
+
     const userData: Partial<User> = {
       fullName: fullName.trim(),
       email: email.toLowerCase().trim(),
+      mobileNumber: mobileNumber ? mobileNumber.trim() : null,
       cognitoId: cognitoUserId,
-      role: UserRole.USER,
+      role: userRole,
       isVerified: false,
       isActive: true,
       loginCount: 0,
     };
 
+    console.log("Creating user with data:", userData);
+
     const user = await userService.createUserData(userData);
+
+    // Add user to Cognito group
+    try {
+      await authService.addUserToCognitoGroup(cognitoUserId, userRole);
+    } catch (error) {
+      console.error("Failed to add user to Cognito group:", error);
+    }
 
     const otpData = OTPService.createOTPData(OtpType.EMAIL_VERIFICATION);
     user.otp = { ...otpData, type: OtpType.EMAIL_VERIFICATION };
     await userRepository.save(user);
+
+  
 
     const emailSent = await EmailService.sendOTP(
       user.email,
@@ -72,6 +87,11 @@ const signUp = async (req: Request, res: Response) => {
     });
   } catch (err: unknown) {
     console.error("Signup error:", err);
+    if (err instanceof Error) {
+      res.status(400).json({ error: err.message });
+    } else {
+      res.status(500).json({ error: "An unexpected error occurred during signup" });
+    }
   }
 };
 
@@ -85,7 +105,19 @@ const login = async (req: Request, res: Response) => {
     }
     const tokens = await authService.loginUser(email, password);
 
-    if (userInfo) {
+    if (userInfo && userInfo.cognitoId) {
+      // Sync role from Cognito groups to database
+      const cognitoRole = await authService.getUserRoleFromCognitoGroups(userInfo.cognitoId);
+
+      if (cognitoRole && cognitoRole !== userInfo.role) {
+        // Update database role to match Cognito group
+        userInfo.role = cognitoRole as UserRole;
+        console.log(`Updated user ${userInfo.email} role to ${cognitoRole} from Cognito groups`);
+      } else if (!cognitoRole) {
+        // Sync database role to Cognito if user is not in any group
+        await authService.syncUserRoleWithCognitoGroups(userInfo.cognitoId, userInfo.role);
+      }
+
       userInfo.lastLogin = new Date();
       userInfo.loginCount += 1;
       await userRepository.save(userInfo);

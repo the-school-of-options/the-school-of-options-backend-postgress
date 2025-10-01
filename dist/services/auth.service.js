@@ -313,7 +313,6 @@ exports.authService = {
                 UserPoolId: exports.userPoolId,
                 Username: username,
             });
-            console.log("User status before reset:", userDetails.UserStatus);
             await exports.cognitoIdentityServiceProvider.adminSetUserPassword({
                 UserPoolId: exports.userPoolId,
                 Username: username,
@@ -531,6 +530,98 @@ exports.authService = {
                 throw new Error("Too many requests. Please try again later");
             }
             throw error;
+        }
+    },
+    addUserToCognitoGroup: async (username, groupName) => {
+        try {
+            await exports.cognitoIdentityServiceProvider.adminAddUserToGroup({
+                UserPoolId: exports.userPoolId,
+                Username: username,
+                GroupName: groupName,
+            });
+            console.log(`User ${username} added to group ${groupName}`);
+        }
+        catch (error) {
+            console.error("Error adding user to group:", error);
+            if (error.code === "ResourceNotFoundException") {
+                throw new Error(`Group ${groupName} not found`);
+            }
+            if (error.code === "UserNotFoundException") {
+                throw new Error("User not found");
+            }
+            if (error.code === "TooManyRequestsException") {
+                throw new Error("Too many requests. Please try again later");
+            }
+            throw error;
+        }
+    },
+    removeUserFromCognitoGroup: async (username, groupName) => {
+        try {
+            await exports.cognitoIdentityServiceProvider.adminRemoveUserFromGroup({
+                UserPoolId: exports.userPoolId,
+                Username: username,
+                GroupName: groupName,
+            });
+            console.log(`User ${username} removed from group ${groupName}`);
+        }
+        catch (error) {
+            console.error("Error removing user from group:", error);
+            if (error.code === "ResourceNotFoundException") {
+                throw new Error(`Group ${groupName} not found`);
+            }
+            if (error.code === "UserNotFoundException") {
+                throw new Error("User not found");
+            }
+            if (error.code === "TooManyRequestsException") {
+                throw new Error("Too many requests. Please try again later");
+            }
+            throw error;
+        }
+    },
+    syncUserRoleWithCognitoGroups: async (username, role) => {
+        try {
+            const groupsResponse = await exports.cognitoIdentityServiceProvider.adminListGroupsForUser({
+                UserPoolId: exports.userPoolId,
+                Username: username,
+            });
+            const currentGroups = groupsResponse.Groups?.map(g => g.GroupName) || [];
+            const targetGroup = role;
+            // Remove from all groups that don't match the target role
+            for (const group of currentGroups) {
+                if (group && group !== targetGroup) {
+                    await exports.authService.removeUserFromCognitoGroup(username, group);
+                }
+            }
+            // Add to target group if not already in it
+            if (!currentGroups.includes(targetGroup)) {
+                await exports.authService.addUserToCognitoGroup(username, targetGroup);
+            }
+            console.log(`User ${username} synced to group ${targetGroup}`);
+        }
+        catch (error) {
+            console.error("Error syncing user role with groups:", error);
+            throw error;
+        }
+    },
+    getUserRoleFromCognitoGroups: async (username) => {
+        try {
+            const groupsResponse = await exports.cognitoIdentityServiceProvider.adminListGroupsForUser({
+                UserPoolId: exports.userPoolId,
+                Username: username,
+            });
+            const groups = groupsResponse.Groups?.map(g => g.GroupName) || [];
+            // Priority: Super-Admin > User
+            if (groups.includes("Super-Admin")) {
+                return "Super-Admin";
+            }
+            else if (groups.includes("User")) {
+                return "User";
+            }
+            return null;
+        }
+        catch (error) {
+            console.error("Error getting user role from groups:", error);
+            return null;
         }
     },
     refreshTokens: async (userIdentifier, refreshToken) => {

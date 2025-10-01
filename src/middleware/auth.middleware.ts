@@ -1,12 +1,17 @@
-import { RequestHandler, Request } from "express";
+import { RequestHandler, Request, Response, NextFunction } from "express";
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 import jwt from "jsonwebtoken";
+import { AppDataSource } from "../config/database";
+import { User, UserRole } from "../entities/user.entity";
 
 declare module "express-serve-static-core" {
   interface Request {
     user?: unknown;
+    dbUser?: User;
   }
 }
+
+const userRepository = AppDataSource.getRepository(User);
 
 function isJWT(token: string): boolean {
   return token.split(".").length === 3;
@@ -60,6 +65,16 @@ export const loginRequired: RequestHandler = async (req, res, next) => {
 
     const tokenData = await getTokenFromHeader(token);
     req["user"] = tokenData;
+
+    // Fetch user from database
+    const cognitoUsername = (tokenData as any).username;
+    if (cognitoUsername) {
+      const dbUser = await userRepository.findOne({
+        where: { cognitoId: cognitoUsername },
+      });
+      req.dbUser = dbUser || undefined;
+    }
+
     next();
   } catch (error) {
     return res.status(401).json({
@@ -68,3 +83,34 @@ export const loginRequired: RequestHandler = async (req, res, next) => {
     });
   }
 };
+
+export const requireRole = (...allowedRoles: UserRole[]): RequestHandler => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.dbUser) {
+        return res.status(401).json({
+          error: "Unauthorized",
+          message: "User not found in database",
+        });
+      }
+
+      if (!allowedRoles.includes(req.dbUser.role)) {
+        return res.status(403).json({
+          error: "Forbidden",
+          message: "You do not have permission to access this resource",
+        });
+      }
+
+      next();
+    } catch (error) {
+      return res.status(500).json({
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  };
+};
+
+export const requireUser: RequestHandler = requireRole(UserRole.USER, UserRole.SUPER_ADMIN);
+
+export const requireSuperAdmin: RequestHandler = requireRole(UserRole.SUPER_ADMIN);
