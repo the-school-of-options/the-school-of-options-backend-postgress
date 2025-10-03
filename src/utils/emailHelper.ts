@@ -15,7 +15,7 @@ export class EmailService {
       },
       password_reset: {
         subject: "Reset Your Password",
-        template: "PasswordResetOTP",
+        template: "PasswordResetLink-SchoolOfOptions",
       },
     };
 

@@ -514,5 +514,202 @@ Need help? Email hello@theschoolofoptions.com.
 — The School of Options Team
 © ${new Date().getFullYear()} The School of Options. All rights reserved.
 `,
-  },
+  },PASSWORD_RESET_LINK: {
+    TemplateName: "PasswordResetLink-SchoolOfOptions",
+    SubjectPart: "Password Reset Request for The School of Options",
+    HtmlPart: `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Reset</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #f0f2f5 0%, #e0e4eb 100%); /* Light background */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .email-container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: #000000; 
+            padding: 40px 20px; 
+            text-align: center; 
+        }
+        .header h1 { 
+            margin: 0; 
+            font-size: 30px; 
+            font-weight: 300; 
+            text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .header .icon { 
+            font-size: 48px; 
+            margin-bottom: 10px; 
+        }
+        .content { 
+            padding: 40px 30px; 
+            line-height: 1.6;
+            color: #495057;
+        }
+        .greeting { 
+            font-size: 20px; 
+            color: #333; 
+            margin-bottom: 20px; 
+            font-weight: 500;
+        }
+        .cta-section {
+            text-align: center;
+            margin: 35px 0;
+            padding: 20px;
+            background: #f8f9fa; /* Light grey background for emphasis */
+            border-radius: 12px;
+        }
+        .cta-button { 
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #000000;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            transition: transform 0.2s;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        .info-box { 
+            background: #fff3cd; 
+            border-left: 4px solid #ffc107; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin: 25px 0; 
+        }
+        .info-title { 
+            color: #856404; 
+            font-weight: bold; 
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        .info-list { 
+            margin: 0; 
+            padding-left: 20px; 
+            color: #856404;
+            list-style-type: disc;
+        }
+        .info-list li { 
+            margin: 8px 0; 
+        }
+        .footer { 
+            text-align: center; 
+            padding: 30px 20px; 
+            color: #6c757d; 
+            font-size: 14px; 
+            border-top: 1px solid #e9ecef;
+            background: #f8f9fa;
+        }
+        .brand { 
+            color: #667eea; 
+            font-weight: bold; 
+            font-size: 18px;
+        }
+        .social-links {
+            margin: 20px 0;
+        }
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #667eea;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <div class="icon">🔒</div>
+            <h1>Password Reset</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">Secure Access to Your Account</p>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">Hello {{name}},</div>
+            
+            <p>
+                We received a request to reset the password for your **The School of Options** account.
+                To proceed, please click the button below to set a new password.
+            </p>
+            
+            <div class="cta-section">
+                <a href="{{resetLink}}" class="cta-button">Reset Your Password</a>
+                <p style="margin: 20px 0 0 0; color: #6c757d; font-size: 14px;">
+                    This link will expire in **{{expiryMinutes}} minutes** for security reasons.
+                </p>
+            </div>
+
+            <p>
+                If the button above does not work, you can copy and paste the following link into your web browser:
+            </p>
+            <p style="word-break: break-all; font-size: 13px; color: #667eea;">
+                {{resetLink}}
+            </p>
+            
+            <div class="info-box">
+                <div class="info-title">⚠️ Security Alert</div>
+                <ul class="info-list">
+                    <li>**If you DID NOT** request a password reset, please ignore this email. Your password will remain unchanged.</li>
+                    <li>For your safety, **do not share this email or link** with anyone.</li>
+                    <li>If you continue to receive unwanted requests, please contact our support team immediately.</li>
+                </ul>
+            </div>
+            
+            <p style="color: #495057; margin-top: 30px;">
+                Stay Safe,<br>
+                <span class="brand">The The School of Options Team</span>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <div class="social-links">
+                <a href="https://www.theschoolofoptions.com">🌐 Website</a>
+                <a href="mailto:support@schoolofoptions.com">✉️ Support</a>
+            </div>
+            <p>This is an automated security message. Please do not reply to this email.</p>
+            <p>&copy; 2025 The School of Options. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>`,
+    TextPart: `
+Hello {{name}},
+
+We received a request to reset the password for your The School of Options account.
+To proceed, please use the link below:
+
+{{resetLink}}
+
+IMPORTANT SECURITY INFORMATION:
+- This link will expire in {{expiryMinutes}} minutes.
+- If you DID NOT request a password reset, please ignore this email. Your password will remain unchanged.
+- Do not share this link with anyone.
+
+Stay Safe,
+The The School of Options Team
+
+This is an automated security message, please do not reply.
+© 2025 The School of Options. All rights reserved.
+`}
 };
