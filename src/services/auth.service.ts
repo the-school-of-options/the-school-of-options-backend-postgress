@@ -13,6 +13,7 @@ import { v4 as uuidv4 } from "uuid";
 import { User } from "../entities/user.entity";
 import { AppDataSource } from "../config/database";
 
+
 const userRepository = AppDataSource.getRepository(User);
 
 export const cognitoIdentityServiceProvider =
@@ -265,7 +266,7 @@ export const authService = {
   ): Promise<AuthenticationResultType> => {
     try {
       const clientSecret =
-        "7o77bdr6n8kglesd1ailmfa4raphdlpd4rh6nbjj8j31o5g4u3f";
+       process.env.AWS_COGNITO_CLIENT_SECRET || "";
 
       authParams.SECRET_HASH = authService.generateSecretHash(
         authParams.USERNAME,
@@ -279,6 +280,8 @@ export const authService = {
         AuthFlow: authFlow,
         AuthParameters: authParams,
       });
+
+      console.log("presss",response)
 
       if (response.AuthenticationResult) {
         return response.AuthenticationResult;
