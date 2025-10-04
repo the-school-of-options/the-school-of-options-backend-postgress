@@ -128,4 +128,34 @@ export class EmailService {
       };
     }
   }
+
+  static async passwordReset(
+    email: string,
+    link:string,
+    expiryMinutes: number = 60
+  ) {
+    try {
+      await AWSUtils.sendEmail(
+        "hello@theschoolofoptions.com",
+        [email],
+        "PasswordResetLink-SchoolOfOptions",
+        {
+          email,
+          link,
+          expiryMinutes: expiryMinutes.toString()
+        }
+      );
+      return {
+        success: true,
+        message: "Password Reset Link sent Successfully",
+      };
+    } catch (error: any) {
+      console.error("Failed to send Password Reset Link email:", error);
+      return {
+        success: false,
+        message: "Failed to send Password Reset Link email",
+        error,
+      };
+    }
+  }
 }

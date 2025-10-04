@@ -165,16 +165,14 @@ const forgotPassword = async (req: Request, res: Response) => {
 
     const resetLink = `${process.env.FRONTEND_BASE_URL}/auth/reset-password?token=${resetToken}`;
 
-    const emailSent = await EmailService.sendOTP(
+    const emailSent = await EmailService.passwordReset(
       user.email,
       resetLink,
-      user.fullName,
-      "password_reset"
     );
 
     if (!emailSent) {
       return res.status(500).json({
-        error: "Failed to send verification email. Please try again.",
+        error: "Failed to send password reset email. Please try again.",
       });
     }
 

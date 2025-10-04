@@ -20,7 +20,8 @@ export const AppDataSource = new DataSource({
   password: "TotalProfit1!",
   database: "theschoolofoptions",
   entities: [Webinar, User, Subscribers],
-  synchronize: true,
+  migrations: ["./src/migrations/*.ts"],
+  synchronize: false,
   logging: false,
   ssl,
 });
