@@ -1,9 +1,8 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
 import dotenv from "dotenv";
-import { Subscribers } from "../entities/subscriber.entity";
-import { Webinar } from "../entities/webinar.entity";
-import { User } from "../entities/user.entity";
+import { Webinar } from "../entities/webinar.entity.js";
+import { User } from "../entities/user.entity.js";
 dotenv.config();
 
 const ssl =
@@ -19,7 +18,7 @@ export const AppDataSource = new DataSource({
   username: "postgres",
   password: "TotalProfit1!",
   database: "theschoolofoptions",
-  entities: [Subscribers, Webinar, User],
+  entities: [Webinar, User],
   synchronize: true,
   logging: false,
   ssl,

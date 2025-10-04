@@ -130,7 +130,7 @@ const forgotPassword = async (req, res) => {
             return;
         }
         const resetToken = (0, bcryptUtils_1.createToken)(user.cognitoId, user.email, "1h");
-        const resetLink = `${process.env.PUBLIC_APP_URL}/auth/reset-password?token=${resetToken}`;
+        const resetLink = `${process.env.FRONTEND_BASE_URL}/auth/reset-password?token=${resetToken}`;
         const emailSent = await emailHelper_1.EmailService.sendOTP(user.email, resetLink, user.fullName, "password_reset");
         if (!emailSent) {
             return res.status(500).json({

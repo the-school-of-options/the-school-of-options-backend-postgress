@@ -252,7 +252,7 @@ exports.authService = {
     },
     getTokens: async (authFlow, authParams) => {
         try {
-            const clientSecret = "7o77bdr6n8kglesd1ailmfa4raphdlpd4rh6nbjj8j31o5g4u3f";
+            const clientSecret = process.env.AWS_COGNITO_CLIENT_SECRET || "";
             authParams.SECRET_HASH = exports.authService.generateSecretHash(authParams.USERNAME, clientId, clientSecret);
             const response = await exports.cognitoIdentityServiceProvider.adminInitiateAuth({
                 UserPoolId: exports.userPoolId,
@@ -260,6 +260,7 @@ exports.authService = {
                 AuthFlow: authFlow,
                 AuthParameters: authParams,
             });
+            console.log("presss", response);
             if (response.AuthenticationResult) {
                 return response.AuthenticationResult;
             }
