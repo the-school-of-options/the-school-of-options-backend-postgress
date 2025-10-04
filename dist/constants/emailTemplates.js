@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.EMAIL_TEMPLATES = void 0;
-exports.EMAIL_TEMPLATES = {
+export const EMAIL_TEMPLATES = {
     EMAIL_VERIFICATION_OTP: {
         TemplateName: "EmailVerificationOTP",
         SubjectPart: "Verify Your The School of Options Account",
@@ -517,7 +514,8 @@ Need help? Email hello@theschoolofoptions.com.
 — The School of Options Team
 © ${new Date().getFullYear()} The School of Options. All rights reserved.
 `,
-    }, PASSWORD_RESET_LINK: {
+    },
+    PASSWORD_RESET_LINK: {
         TemplateName: "PasswordResetLink-SchoolOfOptions",
         SubjectPart: "Password Reset Request for The School of Options",
         HtmlPart: `
@@ -649,7 +647,7 @@ Need help? Email hello@theschoolofoptions.com.
         </div>
         
         <div class="content">
-            <div class="greeting">Hello {{name}},</div>
+            <div class="greeting">Hello {{email}},</div>
             
             <p>
                 We received a request to reset the password for your **The School of Options** account.
@@ -657,7 +655,7 @@ Need help? Email hello@theschoolofoptions.com.
             </p>
             
             <div class="cta-section">
-                <a href="{{resetLink}}" class="cta-button">Reset Your Password</a>
+                <a href="{{link}}" class="cta-button">Reset Your Password</a>
                 <p style="margin: 20px 0 0 0; color: #6c757d; font-size: 14px;">
                     This link will expire in **{{expiryMinutes}} minutes** for security reasons.
                 </p>
@@ -667,7 +665,7 @@ Need help? Email hello@theschoolofoptions.com.
                 If the button above does not work, you can copy and paste the following link into your web browser:
             </p>
             <p style="word-break: break-all; font-size: 13px; color: #667eea;">
-                {{resetLink}}
+                {{link}}
             </p>
             
             <div class="info-box">
@@ -688,7 +686,7 @@ Need help? Email hello@theschoolofoptions.com.
         <div class="footer">
             <div class="social-links">
                 <a href="https://www.theschoolofoptions.com">🌐 Website</a>
-                <a href="mailto:support@schoolofoptions.com">✉️ Support</a>
+                <a href="mailto:hello@schoolofoptions.com">✉️ Support</a>
             </div>
             <p>This is an automated security message. Please do not reply to this email.</p>
             <p>&copy; 2025 The School of Options. All rights reserved.</p>
@@ -697,12 +695,12 @@ Need help? Email hello@theschoolofoptions.com.
 </body>
 </html>`,
         TextPart: `
-Hello {{name}},
+Hello {{email}},
 
 We received a request to reset the password for your The School of Options account.
 To proceed, please use the link below:
 
-{{resetLink}}
+{{link}}
 
 IMPORTANT SECURITY INFORMATION:
 - This link will expire in {{expiryMinutes}} minutes.

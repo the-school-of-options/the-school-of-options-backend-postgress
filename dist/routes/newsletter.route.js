@@ -1,11 +1,9 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const database_js_1 = require("../config/database.js");
-const listmonk_service_js_1 = require("../services/listmonk.service.js");
-const subscriber_entity_js_1 = require("../entities/subscriber.entity.js");
-const emailHelper_js_1 = require("../utils/emailHelper.js");
-const newsLetterRouter = (0, express_1.Router)();
+import { Router } from "express";
+import { AppDataSource } from "../config/database.js";
+import { upsertSubscriber } from "../services/listmonk.service.js";
+import { Subscribers } from "../entities/subscriber.entity.js";
+import { EmailService } from "../utils/emailHelper.js";
+const newsLetterRouter = Router();
 function isValidEmail(email) {
     if (!email)
         return false;
@@ -18,7 +16,7 @@ newsLetterRouter.post("/subscribe", async (req, res) => {
         if (!isValidEmail(email)) {
             return res.status(400).json({ ok: false, error: "invalid_email" });
         }
-        const repo = database_js_1.AppDataSource.getRepository(subscriber_entity_js_1.Subscribers);
+        const repo = AppDataSource.getRepository(Subscribers);
         let user = await repo.findOne({ where: { email } });
         // if (user) {
         //   res.status(401).json({ error: "Email already subscribed" });
@@ -38,7 +36,7 @@ newsLetterRouter.post("/subscribe", async (req, res) => {
             await repo.save(user);
         }
         try {
-            const lm = await (0, listmonk_service_js_1.upsertSubscriber)(email, user.name ?? null, req.body.listId !== undefined ? Number(req.body.listId) : null);
+            const lm = await upsertSubscriber(email, user.name ?? null, req.body.listId !== undefined ? Number(req.body.listId) : null);
             if (lm?.data?.id && "listmonkId" in user && !user.listmonkId) {
                 user.listmonkId = lm.data.id;
                 await repo.save(user);
@@ -52,7 +50,7 @@ newsLetterRouter.post("/subscribe", async (req, res) => {
                 detail: e?.message ?? "listmonk_upsert_failed",
             });
         }
-        const emailSent = await emailHelper_js_1.EmailService.sendWelcomeToNewsLetter(user.email);
+        const emailSent = await EmailService.sendWelcomeToNewsLetter(user.email);
         return res.status(created ? 201 : 200).json({ ok: true, user });
     }
     catch (err) {
@@ -61,4 +59,4 @@ newsLetterRouter.post("/subscribe", async (req, res) => {
             .json({ ok: false, error: err?.message || "subscribe_failed" });
     }
 });
-exports.default = newsLetterRouter;
+export default newsLetterRouter;

@@ -1,11 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateSecurePassword = exports.formatPhoneNumber = exports.sleep = exports.generateRandomPassword = exports.generatePrefixedUUID = void 0;
-const uuid_1 = require("uuid");
+import { v4 as uuidv4 } from "uuid";
 const generatePrefixedUUID = (prefix = "") => {
-    return prefix + (0, uuid_1.v4)().slice(prefix.length);
+    return prefix + uuidv4().slice(prefix.length);
 };
-exports.generatePrefixedUUID = generatePrefixedUUID;
 const generateSecurePassword = () => {
     const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const lowercase = "abcdefghijklmnopqrstuvwxyz";
@@ -21,7 +17,6 @@ const generateSecurePassword = () => {
         .sort(() => Math.random() - 0.5) // Shuffle the password to mix characters
         .join("");
 };
-exports.generateSecurePassword = generateSecurePassword;
 const generateRandomPassword = (length) => {
     const lowercaseCharset = "abcdefghijklmnopqrstuvwxyz";
     const uppercaseCharset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -62,12 +57,10 @@ const generateRandomPassword = (length) => {
     }
     return password;
 };
-exports.generateRandomPassword = generateRandomPassword;
 // sleep time expects milliseconds
 const sleep = (time) => {
     return new Promise((resolve) => setTimeout(resolve, time));
 };
-exports.sleep = sleep;
 const formatPhoneNumber = (phoneNumber = "", internationalDialingCode = "+1") => {
     if (phoneNumber.startsWith("+")) {
         return phoneNumber; //we assume it is already formatted
@@ -79,4 +72,4 @@ const formatPhoneNumber = (phoneNumber = "", internationalDialingCode = "+1") =>
     const formattedPhoneNumber = `${internationalDialingCode}${numericPhoneNumber}`;
     return formattedPhoneNumber;
 };
-exports.formatPhoneNumber = formatPhoneNumber;
+export { generatePrefixedUUID, generateRandomPassword, sleep, formatPhoneNumber, generateSecurePassword, };

@@ -1,16 +1,5 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllLists = getAllLists;
-exports.getSubscriberByEmail = getSubscriberByEmail;
-exports.addSubscriberToList = addSubscriberToList;
-exports.upsertSubscriber = upsertSubscriber;
-exports.addToSpecificList = addToSpecificList;
-exports.addToAllLists = addToAllLists;
-const axios_1 = __importDefault(require("axios"));
-const client = axios_1.default.create({
+import axios from "axios";
+const client = axios.create({
     baseURL: "https://mail.theschoolofoptions.com",
     headers: { "Content-Type": "application/json" },
     auth: {
@@ -18,7 +7,7 @@ const client = axios_1.default.create({
         password: "6DJKSXqcY788i10pt8AZIwGDyYL8tLZn",
     },
 });
-async function getAllLists() {
+export async function getAllLists() {
     try {
         const response = await client.get("/api/lists");
         return response.data.data.results;
@@ -28,7 +17,7 @@ async function getAllLists() {
         throw new Error(`Failed to fetch lists: ${err?.response?.data?.message || err?.message}`);
     }
 }
-async function getSubscriberByEmail(email) {
+export async function getSubscriberByEmail(email) {
     try {
         const response = await client.get(`/api/subscribers?query=subscribers.email='${email}'`);
         const subscribers = response.data.data.results;
@@ -42,7 +31,7 @@ async function getSubscriberByEmail(email) {
         return null;
     }
 }
-async function addSubscriberToList(subscriberId, listId) {
+export async function addSubscriberToList(subscriberId, listId) {
     try {
         const response = await client.put("/api/subscribers/lists", {
             ids: [subscriberId],
@@ -64,7 +53,7 @@ async function addSubscriberToList(subscriberId, listId) {
  * @param name - Subscriber name (optional)
  * @param listId - Specific list ID (if provided) or null for all lists
  */
-async function upsertSubscriber(email, name, listId) {
+export async function upsertSubscriber(email, name, listId) {
     try {
         // Check if subscriber already exists
         const existingSubscriber = await getSubscriberByEmail(email);
@@ -113,9 +102,9 @@ async function upsertSubscriber(email, name, listId) {
         throw new Error(`Listmonk sync failed: ${err?.response?.data?.message || err?.message}`);
     }
 }
-async function addToSpecificList(email, name, listId) {
+export async function addToSpecificList(email, name, listId) {
     return await upsertSubscriber(email, name, listId);
 }
-async function addToAllLists(email, name) {
+export async function addToAllLists(email, name) {
     return await upsertSubscriber(email, name, null);
 }

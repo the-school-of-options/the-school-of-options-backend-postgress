@@ -1,8 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.EmailService = void 0;
-const aws_1 = require("./aws");
-class EmailService {
+import { AWSUtils } from "./aws";
+export class EmailService {
     static async sendOTP(email, otp, name, type, expiryMinutes = 10) {
         const templates = {
             email_verification: {
@@ -19,7 +16,7 @@ class EmailService {
             throw new Error(`Invalid OTP type: ${type}`);
         }
         try {
-            await aws_1.AWSUtils.sendEmail("hello@theschoolofoptions.com", [email], config.template, {
+            await AWSUtils.sendEmail("hello@theschoolofoptions.com", [email], config.template, {
                 name,
                 otp,
                 expiryMinutes: expiryMinutes.toString(),
@@ -33,7 +30,7 @@ class EmailService {
     }
     static async sendTalkToCounsellorEmail(name, email, phone) {
         try {
-            await aws_1.AWSUtils.sendEmail("hello@theschoolofoptions.com", ["hello@theschoolofoptions.com"], "CounsellorRequest", {
+            await AWSUtils.sendEmail("hello@theschoolofoptions.com", ["hello@theschoolofoptions.com"], "CounsellorRequest", {
                 fullName: name,
                 email,
                 phone,
@@ -54,7 +51,7 @@ class EmailService {
     }
     static async sendWelcomeToNewsLetter(email) {
         try {
-            await aws_1.AWSUtils.sendEmail("hello@theschoolofoptions.com", [email], "NewsletterWelcome", {
+            await AWSUtils.sendEmail("hello@theschoolofoptions.com", [email], "NewsletterWelcome", {
                 email,
             });
             return {
@@ -73,7 +70,7 @@ class EmailService {
     }
     static async sendWelcomeToWebinar(email, fullName, phoneNumber, webinarName) {
         try {
-            await aws_1.AWSUtils.sendEmail("hello@theschoolofoptions.com", [email], "WebinarRegistrationThankYou", {
+            await AWSUtils.sendEmail("hello@theschoolofoptions.com", [email], "WebinarRegistrationThankYou", {
                 email,
                 fullName,
                 phoneNumber,
@@ -93,5 +90,25 @@ class EmailService {
             };
         }
     }
+    static async passwordReset(email, link, expiryMinutes = 60) {
+        try {
+            await AWSUtils.sendEmail("hello@theschoolofoptions.com", [email], "PasswordResetLink-SchoolOfOptions", {
+                email,
+                link,
+                expiryMinutes: expiryMinutes.toString()
+            });
+            return {
+                success: true,
+                message: "Password Reset Link sent Successfully",
+            };
+        }
+        catch (error) {
+            console.error("Failed to send Password Reset Link email:", error);
+            return {
+                success: false,
+                message: "Failed to send Password Reset Link email",
+                error,
+            };
+        }
+    }
 }
-exports.EmailService = EmailService;

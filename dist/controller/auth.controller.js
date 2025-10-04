@@ -1,14 +1,11 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.authController = void 0;
-const auth_service_1 = require("../services/auth.service");
-const user_service_1 = require("../services/user.service");
-const bcryptUtils_1 = require("../utils/bcryptUtils");
-const database_1 = require("../config/database");
-const user_entity_1 = require("../entities/user.entity");
-const otp_1 = require("../utils/otp");
-const emailHelper_1 = require("../utils/emailHelper");
-const userRepository = database_1.AppDataSource.getRepository(user_entity_1.User);
+import { authService } from "../services/auth.service";
+import { userService } from "../services/user.service";
+import { createToken, decodeTokenPayload, verifyToken, } from "../utils/bcryptUtils";
+import { AppDataSource } from "../config/database";
+import { OtpType, User, UserRole } from "../entities/user.entity";
+import { OTPService } from "../utils/otp";
+import { EmailService } from "../utils/emailHelper";
+const userRepository = AppDataSource.getRepository(User);
 const signUp = async (req, res) => {
     const { email, password, fullName, mobileNumber, role } = req.body;
     try {
@@ -17,12 +14,12 @@ const signUp = async (req, res) => {
                 error: "Email, password, and full name are required",
             });
         }
-        const existingUser = await user_service_1.userService.getUserByEmail(email);
+        const existingUser = await userService.getUserByEmail(email);
         if (existingUser) {
             return res.status(400).json({ error: "Email is already registered. Please log in." });
         }
-        const cognitoUserId = await auth_service_1.authService.createUserInCognito(email, password);
-        const userRole = role && role === user_entity_1.UserRole.SUPER_ADMIN ? user_entity_1.UserRole.SUPER_ADMIN : user_entity_1.UserRole.USER;
+        const cognitoUserId = await authService.createUserInCognito(email, password);
+        const userRole = role && role === UserRole.SUPER_ADMIN ? UserRole.SUPER_ADMIN : UserRole.USER;
         const userData = {
             fullName: fullName.trim(),
             email: email.toLowerCase().trim(),
@@ -34,18 +31,18 @@ const signUp = async (req, res) => {
             loginCount: 0,
         };
         console.log("Creating user with data:", userData);
-        const user = await user_service_1.userService.createUserData(userData);
+        const user = await userService.createUserData(userData);
         // Add user to Cognito group
         try {
-            await auth_service_1.authService.addUserToCognitoGroup(cognitoUserId, userRole);
+            await authService.addUserToCognitoGroup(cognitoUserId, userRole);
         }
         catch (error) {
             console.error("Failed to add user to Cognito group:", error);
         }
-        const otpData = otp_1.OTPService.createOTPData(user_entity_1.OtpType.EMAIL_VERIFICATION);
-        user.otp = { ...otpData, type: user_entity_1.OtpType.EMAIL_VERIFICATION };
+        const otpData = OTPService.createOTPData(OtpType.EMAIL_VERIFICATION);
+        user.otp = { ...otpData, type: OtpType.EMAIL_VERIFICATION };
         await userRepository.save(user);
-        const emailSent = await emailHelper_1.EmailService.sendOTP(user.email, otpData.code, user.fullName, user_entity_1.OtpType.EMAIL_VERIFICATION);
+        const emailSent = await EmailService.sendOTP(user.email, otpData.code, user.fullName, OtpType.EMAIL_VERIFICATION);
         if (!emailSent) {
             return res.status(500).json({
                 error: "Failed to send verification email. Please try again.",
@@ -71,15 +68,15 @@ const signUp = async (req, res) => {
 const login = async (req, res) => {
     const { email, password } = req.body;
     try {
-        const userInfo = await user_service_1.userService.getUserByEmail(email);
+        const userInfo = await userService.getUserByEmail(email);
         if (userInfo?.isVerified === false) {
             res.status(403).json({ error: "Please verify your email." });
             return;
         }
-        const tokens = await auth_service_1.authService.loginUser(email, password);
+        const tokens = await authService.loginUser(email, password);
         if (userInfo && userInfo.cognitoId) {
             // Sync role from Cognito groups to database
-            const cognitoRole = await auth_service_1.authService.getUserRoleFromCognitoGroups(userInfo.cognitoId);
+            const cognitoRole = await authService.getUserRoleFromCognitoGroups(userInfo.cognitoId);
             if (cognitoRole && cognitoRole !== userInfo.role) {
                 // Update database role to match Cognito group
                 userInfo.role = cognitoRole;
@@ -87,13 +84,13 @@ const login = async (req, res) => {
             }
             else if (!cognitoRole) {
                 // Sync database role to Cognito if user is not in any group
-                await auth_service_1.authService.syncUserRoleWithCognitoGroups(userInfo.cognitoId, userInfo.role);
+                await authService.syncUserRoleWithCognitoGroups(userInfo.cognitoId, userInfo.role);
             }
             userInfo.lastLogin = new Date();
             userInfo.loginCount += 1;
             await userRepository.save(userInfo);
         }
-        const decodedToken = tokens.AccessToken ? (0, bcryptUtils_1.decodeTokenPayload)(tokens.AccessToken) : undefined;
+        const decodedToken = tokens.AccessToken ? decodeTokenPayload(tokens.AccessToken) : undefined;
         res.json({
             tokens,
             user: {
@@ -118,7 +115,7 @@ const login = async (req, res) => {
 const forgotPassword = async (req, res) => {
     const { email } = req.body;
     try {
-        const user = await user_service_1.userService.getUserByEmail(email);
+        const user = await userService.getUserByEmail(email);
         if (!user) {
             res.status(404).json({ message: "User not found" });
             return;
@@ -129,12 +126,12 @@ const forgotPassword = async (req, res) => {
                 .json({ message: "Password reset not applicable for this account." });
             return;
         }
-        const resetToken = (0, bcryptUtils_1.createToken)(user.cognitoId, user.email, "1h");
+        const resetToken = createToken(user.cognitoId, user.email, "1h");
         const resetLink = `${process.env.FRONTEND_BASE_URL}/auth/reset-password?token=${resetToken}`;
-        const emailSent = await emailHelper_1.EmailService.sendOTP(user.email, resetLink, user.fullName, "password_reset");
+        const emailSent = await EmailService.passwordReset(user.email, resetLink);
         if (!emailSent) {
             return res.status(500).json({
-                error: "Failed to send verification email. Please try again.",
+                error: "Failed to send password reset email. Please try again.",
             });
         }
         // res
@@ -155,10 +152,10 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
     const { token, password } = req.body;
     try {
-        if ((0, bcryptUtils_1.verifyToken)(token)) {
-            const decodedToken = (0, bcryptUtils_1.decodeTokenPayload)(token);
+        if (verifyToken(token)) {
+            const decodedToken = decodeTokenPayload(token);
             const userId = decodedToken.userId;
-            await auth_service_1.authService.resetPassword(userId, password);
+            await authService.resetPassword(userId, password);
             res.json({ message: "Password reset successful" });
         }
         else {
@@ -187,7 +184,7 @@ const getUserById = async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 };
-exports.authController = {
+export const authController = {
     signUp,
     login,
     forgotPassword,

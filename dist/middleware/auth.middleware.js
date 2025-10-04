@@ -1,30 +1,24 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.requireSuperAdmin = exports.requireUser = exports.requireRole = exports.loginRequired = exports.getTokenFromHeader = void 0;
-const aws_jwt_verify_1 = require("aws-jwt-verify");
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const database_1 = require("../config/database");
-const user_entity_1 = require("../entities/user.entity");
-const userRepository = database_1.AppDataSource.getRepository(user_entity_1.User);
+import { CognitoJwtVerifier } from "aws-jwt-verify";
+import jwt from "jsonwebtoken";
+import { AppDataSource } from "../config/database";
+import { User, UserRole } from "../entities/user.entity";
+const userRepository = AppDataSource.getRepository(User);
 function isJWT(token) {
     return token.split(".").length === 3;
 }
-const getTokenFromHeader = async (token) => {
+export const getTokenFromHeader = async (token) => {
     if (!isJWT(token)) {
         throw new Error("Token is not a valid JWT");
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const decodedToken = jsonwebtoken_1.default.decode(token, { complete: true });
+    const decodedToken = jwt.decode(token, { complete: true });
     if (!decodedToken || !decodedToken.payload) {
         throw new Error("Invalid JWT structure");
     }
     const iss = decodedToken.payload.iss;
     if (iss.startsWith("https://cognito-idp.")) {
         try {
-            const verifier = aws_jwt_verify_1.CognitoJwtVerifier.create({
+            const verifier = CognitoJwtVerifier.create({
                 userPoolId: process.env.AWS_COGNITO_USER_POOL_ID,
                 tokenUse: "access",
                 clientId: process.env.AWS_COGNITO_CLIENT_ID,
@@ -40,8 +34,7 @@ const getTokenFromHeader = async (token) => {
         throw new Error(`Unsupported token issuer: ${iss}`);
     }
 };
-exports.getTokenFromHeader = getTokenFromHeader;
-const loginRequired = async (req, res, next) => {
+export const loginRequired = async (req, res, next) => {
     try {
         const authorizationHeader = req.headers.authorization || "";
         if (!authorizationHeader) {
@@ -55,7 +48,7 @@ const loginRequired = async (req, res, next) => {
                 .status(401)
                 .json({ error: "No token found in authorization header" });
         }
-        const tokenData = await (0, exports.getTokenFromHeader)(token);
+        const tokenData = await getTokenFromHeader(token);
         req["user"] = tokenData;
         // Fetch user from database
         const cognitoUsername = tokenData.username;
@@ -74,8 +67,7 @@ const loginRequired = async (req, res, next) => {
         });
     }
 };
-exports.loginRequired = loginRequired;
-const requireRole = (...allowedRoles) => {
+export const requireRole = (...allowedRoles) => {
     return async (req, res, next) => {
         try {
             if (!req.dbUser) {
@@ -100,6 +92,5 @@ const requireRole = (...allowedRoles) => {
         }
     };
 };
-exports.requireRole = requireRole;
-exports.requireUser = (0, exports.requireRole)(user_entity_1.UserRole.USER, user_entity_1.UserRole.SUPER_ADMIN);
-exports.requireSuperAdmin = (0, exports.requireRole)(user_entity_1.UserRole.SUPER_ADMIN);
+export const requireUser = requireRole(UserRole.USER, UserRole.SUPER_ADMIN);
+export const requireSuperAdmin = requireRole(UserRole.SUPER_ADMIN);

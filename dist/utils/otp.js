@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.OTPService = void 0;
-class OTPService {
+export class OTPService {
     static generateOTP() {
         return Math.floor(100000 + Math.random() * 900000).toString();
     }
@@ -52,4 +49,3 @@ class OTPService {
         return minutesDiff >= cooldownMinutes;
     }
 }
-exports.OTPService = OTPService;

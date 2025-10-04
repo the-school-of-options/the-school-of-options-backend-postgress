@@ -1,4 +1,3 @@
-"use strict";
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -8,41 +7,40 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Subscribers = void 0;
-const typeorm_1 = require("typeorm");
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, } from "typeorm";
 let Subscribers = class Subscribers {
 };
-exports.Subscribers = Subscribers;
 __decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)("uuid"),
+    PrimaryGeneratedColumn("uuid"),
     __metadata("design:type", String)
 ], Subscribers.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Index)({ unique: true }),
-    (0, typeorm_1.Column)({ type: "varchar", length: 320 }),
+    Index({ unique: true }),
+    Column({ type: "varchar", length: 320 }),
     __metadata("design:type", String)
 ], Subscribers.prototype, "email", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: "varchar", length: 160, nullable: true }),
+    Column({ type: "varchar", length: 160, nullable: true }),
     __metadata("design:type", Object)
 ], Subscribers.prototype, "name", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: "boolean", default: true }),
+    Column({ type: "boolean", default: true }),
     __metadata("design:type", Boolean)
 ], Subscribers.prototype, "subscribed", void 0);
 __decorate([
-    (0, typeorm_1.Column)("simple-array", { default: "" }),
+    Column("simple-array", { default: "" }),
     __metadata("design:type", Array)
 ], Subscribers.prototype, "subscribedLists", void 0);
 __decorate([
-    (0, typeorm_1.CreateDateColumn)(),
+    CreateDateColumn(),
     __metadata("design:type", Date)
 ], Subscribers.prototype, "createdAt", void 0);
 __decorate([
-    (0, typeorm_1.UpdateDateColumn)(),
+    UpdateDateColumn(),
     __metadata("design:type", Date)
 ], Subscribers.prototype, "updatedAt", void 0);
-exports.Subscribers = Subscribers = __decorate([
-    (0, typeorm_1.Entity)("subscribers")
+Subscribers = __decorate([
+    Entity("subscribers")
 ], Subscribers);
+export default Subscribers;
+export { Subscribers };

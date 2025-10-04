@@ -1,22 +1,17 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const cors_1 = __importDefault(require("cors"));
-const dotenv_1 = __importDefault(require("dotenv"));
-const database_1 = require("./config/database");
-const newsletter_route_1 = __importDefault(require("./routes/newsletter.route"));
-const webinar_route_1 = __importDefault(require("./routes/webinar.route"));
-const auth_route_1 = __importDefault(require("./routes/auth.route"));
-const otp_route_1 = __importDefault(require("./routes/otp.route"));
-dotenv_1.default.config();
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import { initDB } from "./config/database";
+import newsLetterRouter from "./routes/newsletter.route";
+import webinarRouter from "./routes/webinar.route";
+import authRouter from "./routes/auth.route";
+import otpRouter from "./routes/otp.route";
+dotenv.config();
 async function main() {
-    await (0, database_1.initDB)();
-    const app = (0, express_1.default)();
+    await initDB();
+    const app = express();
     // CORS configuration
-    app.use((0, cors_1.default)({
+    app.use(cors({
         origin: [
             'http://localhost:3000',
             'http://localhost:3001',
@@ -28,12 +23,12 @@ async function main() {
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
     }));
-    app.use(express_1.default.json({ limit: "2mb" }));
+    app.use(express.json({ limit: "2mb" }));
     app.get("/api/v1/health", (_, res) => res.send("OK"));
-    app.use("/api/v1/newsletter", newsletter_route_1.default);
-    app.use("/api/v1/webinar", webinar_route_1.default);
-    app.use("/api/v1/auth", auth_route_1.default);
-    app.use("/api/v1/otp", otp_route_1.default);
+    app.use("/api/v1/newsletter", newsLetterRouter);
+    app.use("/api/v1/webinar", webinarRouter);
+    app.use("/api/v1/auth", authRouter);
+    app.use("/api/v1/otp", otpRouter);
     const port = Number(process.env.PORT || 8000);
     app.listen(port, () => {
         console.log(`the-school-of-options API running on :${port}`);

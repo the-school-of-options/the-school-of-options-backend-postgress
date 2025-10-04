@@ -1,12 +1,9 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.userService = void 0;
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const typeorm_1 = require("typeorm");
-const database_1 = require("../config/database");
-const user_entity_1 = require("../entities/user.entity");
-const userRepository = database_1.AppDataSource.getRepository(user_entity_1.User);
-exports.userService = {
+import { QueryFailedError } from "typeorm";
+import { AppDataSource } from "../config/database";
+import { User } from "../entities/user.entity";
+const userRepository = AppDataSource.getRepository(User);
+export const userService = {
     createUserData: async (userData) => {
         const { email } = userData;
         try {
@@ -22,7 +19,7 @@ exports.userService = {
             return user;
         }
         catch (error) {
-            if (error instanceof typeorm_1.QueryFailedError &&
+            if (error instanceof QueryFailedError &&
                 error.message.includes("duplicate key")) {
                 console.error("Duplicate key error:", error);
                 throw new Error("A user with this email already exists.");

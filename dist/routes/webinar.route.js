@@ -1,15 +1,10 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const database_js_1 = require("../config/database.js");
-const webinar_entity_js_1 = require("../entities/webinar.entity.js");
-const axios_1 = __importDefault(require("axios"));
-const listmonk_service_js_1 = require("../services/listmonk.service.js");
-const emailHelper_js_1 = require("../utils/emailHelper.js");
-const client = axios_1.default.create({
+import { Router } from "express";
+import { AppDataSource } from "../config/database.js";
+import { Webinar } from "../entities/webinar.entity.js";
+import axios from "axios";
+import { upsertSubscriber } from "../services/listmonk.service.js";
+import { EmailService } from "../utils/emailHelper.js";
+const client = axios.create({
     baseURL: "https://mail.theschoolofoptions.com",
     headers: { "Content-Type": "application/json" },
     auth: {
@@ -17,7 +12,7 @@ const client = axios_1.default.create({
         password: "6DJKSXqcY788i10pt8AZIwGDyYL8tLZn",
     },
 });
-const webinarRouter = (0, express_1.Router)();
+const webinarRouter = Router();
 webinarRouter.post("/register", async (req, res) => {
     try {
         const { email, fullName, phoneNumber, source, webinarName } = req.body;
@@ -48,7 +43,7 @@ webinarRouter.post("/register", async (req, res) => {
                 });
             }
         }
-        const repo = database_js_1.AppDataSource.getRepository(webinar_entity_js_1.Webinar);
+        const repo = AppDataSource.getRepository(Webinar);
         const webinar = repo.create({
             email,
             fullName,
@@ -58,12 +53,12 @@ webinarRouter.post("/register", async (req, res) => {
         await repo.save(webinar);
         // Sync with Listmonk
         try {
-            const lm = await (0, listmonk_service_js_1.upsertSubscriber)(email, fullName ?? null, req.body.listId !== undefined ? Number(req.body.listId) : listId);
+            const lm = await upsertSubscriber(email, fullName ?? null, req.body.listId !== undefined ? Number(req.body.listId) : listId);
             if (lm?.data?.id && !webinar.webinarName) {
                 webinar.webinarName = webinarName;
                 await repo.save(webinar);
             }
-            const emailSent = await emailHelper_js_1.EmailService.sendWelcomeToWebinar(email, fullName, phoneNumber, webinarName);
+            const emailSent = await EmailService.sendWelcomeToWebinar(email, fullName, phoneNumber, webinarName);
         }
         catch (e) {
             console.error("Listmonk sync failed:", e);
@@ -84,4 +79,4 @@ webinarRouter.post("/register", async (req, res) => {
         });
     }
 });
-exports.default = webinarRouter;
+export default webinarRouter;

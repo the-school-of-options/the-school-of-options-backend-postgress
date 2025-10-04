@@ -1,10 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.setupEmailTemplates = exports.AWSUtils = void 0;
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const client_ses_1 = require("@aws-sdk/client-ses");
-const emailTemplates_1 = require("../constants/emailTemplates");
-const ses = new client_ses_1.SESClient({
+import { SESClient, SendTemplatedEmailCommand, CreateTemplateCommand, UpdateTemplateCommand, DeleteTemplateCommand, ListTemplatesCommand, } from "@aws-sdk/client-ses";
+import { EMAIL_TEMPLATES } from "../constants/emailTemplates";
+const ses = new SESClient({
     region: process.env.AWS_REGION,
     credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
@@ -15,10 +12,10 @@ const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
 };
-exports.AWSUtils = {
+export const AWSUtils = {
     createTemplate: async (templateConfig) => {
         try {
-            const command = new client_ses_1.CreateTemplateCommand({
+            const command = new CreateTemplateCommand({
                 Template: templateConfig,
             });
             await ses.send(command);
@@ -36,7 +33,7 @@ exports.AWSUtils = {
     },
     updateTemplate: async (templateConfig) => {
         try {
-            const command = new client_ses_1.UpdateTemplateCommand({
+            const command = new UpdateTemplateCommand({
                 Template: templateConfig,
             });
             await ses.send(command);
@@ -50,10 +47,10 @@ exports.AWSUtils = {
     },
     initializeTemplates: async () => {
         console.log("🚀 Initializing email templates...");
-        const templates = Object.values(emailTemplates_1.EMAIL_TEMPLATES);
+        const templates = Object.values(EMAIL_TEMPLATES);
         const results = [];
         for (const template of templates) {
-            const created = await exports.AWSUtils.createTemplate(template);
+            const created = await AWSUtils.createTemplate(template);
             results.push({ name: template.TemplateName, success: created });
         }
         const successCount = results.filter((r) => r.success).length;
@@ -62,7 +59,7 @@ exports.AWSUtils = {
     },
     listTemplates: async () => {
         try {
-            const command = new client_ses_1.ListTemplatesCommand({});
+            const command = new ListTemplatesCommand({});
             const response = await ses.send(command);
             console.log("📋 Existing templates:", response.TemplatesMetadata?.map((t) => t.Name));
             return response.TemplatesMetadata || [];
@@ -74,7 +71,7 @@ exports.AWSUtils = {
     },
     deleteTemplate: async (templateName) => {
         try {
-            const command = new client_ses_1.DeleteTemplateCommand({
+            const command = new DeleteTemplateCommand({
                 TemplateName: templateName,
             });
             await ses.send(command);
@@ -103,7 +100,7 @@ exports.AWSUtils = {
                 Template: templateName,
                 TemplateData: JSON.stringify(templateData),
             };
-            const command = new client_ses_1.SendTemplatedEmailCommand(params);
+            const command = new SendTemplatedEmailCommand(params);
             const response = await ses.send(command);
             console.log(`✅ Email sent successfully using template '${templateName}'. MessageId: ${response.MessageId}`);
             return response.MessageId;
@@ -121,10 +118,9 @@ exports.AWSUtils = {
         }
     },
 };
-const setupEmailTemplates = async () => {
+export const setupEmailTemplates = async () => {
     console.log("🔧 Setting up email templates for TheSchoolOfOptions...");
-    await exports.AWSUtils.initializeTemplates();
-    await exports.AWSUtils.listTemplates();
+    await AWSUtils.initializeTemplates();
+    await AWSUtils.listTemplates();
     console.log("✅ Email template setup complete!");
 };
-exports.setupEmailTemplates = setupEmailTemplates;

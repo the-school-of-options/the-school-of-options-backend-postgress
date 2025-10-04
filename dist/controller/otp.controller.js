@@ -1,16 +1,10 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.otpController = void 0;
-const otp_1 = require("../utils/otp");
-const auth_service_1 = require("../services/auth.service");
-const database_1 = require("../config/database");
-const user_entity_1 = require("../entities/user.entity");
-const emailHelper_1 = require("../utils/emailHelper");
-const axios_1 = __importDefault(require("axios"));
-const userRepository = database_1.AppDataSource.getRepository(user_entity_1.User);
+import { OTPService } from "../utils/otp";
+import { authService } from "../services/auth.service";
+import { AppDataSource } from "../config/database";
+import { OtpType, User } from "../entities/user.entity";
+import { EmailService } from "../utils/emailHelper";
+import axios from "axios";
+const userRepository = AppDataSource.getRepository(User);
 const verifyOTP = async (req, res) => {
     const { email, otp, password } = req.body;
     try {
@@ -35,7 +29,7 @@ const verifyOTP = async (req, res) => {
         if (user.otp) {
             user.otp.attempts = (user.otp.attempts || 0) + 1;
         }
-        const validation = otp_1.OTPService.validateOTP(user.otp, otp);
+        const validation = OTPService.validateOTP(user.otp, otp);
         if (!validation.valid) {
             await userRepository.save(user);
             return res.status(400).json({
@@ -53,12 +47,12 @@ const verifyOTP = async (req, res) => {
                 error: "User does not have a valid Cognito ID",
             });
         }
-        await auth_service_1.authService.verifyUserEmail(user.cognitoId);
-        const tokens = await auth_service_1.authService.loginUser(user.email, password);
+        await authService.verifyUserEmail(user.cognitoId);
+        const tokens = await authService.loginUser(user.email, password);
         // Send WhatsApp message if mobile number is provided
         if (user.mobileNumber) {
             try {
-                const sendWhatsapp = await axios_1.default.post('https://backend.aisensy.com/campaign/t1/api/v2', {
+                const sendWhatsapp = await axios.post('https://backend.aisensy.com/campaign/t1/api/v2', {
                     apiKey: process.env.AI_SENSY_ACCESS_TOKEN,
                     campaignName: process.env.AI_SENSY_CAMPAIGN_NAME,
                     destination: user.mobileNumber,
@@ -121,19 +115,19 @@ const resendOTP = async (req, res) => {
         }
         // Check rate limiting
         if (user.otp &&
-            !otp_1.OTPService.canResendOTP(user.otp.lastSentAt ?? undefined)) {
+            !OTPService.canResendOTP(user.otp.lastSentAt ?? undefined)) {
             return res.status(429).json({
                 error: "Please wait before requesting another OTP",
             });
         }
         // Generate new OTP
-        const otpData = otp_1.OTPService.createOTPData(user_entity_1.OtpType.EMAIL_VERIFICATION);
+        const otpData = OTPService.createOTPData(OtpType.EMAIL_VERIFICATION);
         if (otpData) {
             user.otp = otpData;
             await userRepository.save(user);
         }
         // Send OTP
-        const emailSent = await emailHelper_1.EmailService.sendOTP(user.email, otpData.code, user.fullName, "email_verification");
+        const emailSent = await EmailService.sendOTP(user.email, otpData.code, user.fullName, "email_verification");
         if (!emailSent) {
             return res.status(500).json({
                 error: "Failed to send OTP. Please try again.",
@@ -151,7 +145,7 @@ const resendOTP = async (req, res) => {
         });
     }
 };
-exports.otpController = {
+export const otpController = {
     verifyOTP,
     resendOTP,
 };
