@@ -8,7 +8,7 @@ import {
 } from "typeorm";
 
 @Entity("webinars")
-export class Webinar {
+export default class Webinar {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
@@ -38,3 +38,5 @@ export class Webinar {
   @UpdateDateColumn()
   updatedAt!: Date;
 }
+
+export { Webinar };

@@ -1,6 +1,7 @@
 {
     "name": "the-school-of-options-backend",
     "version": "1.0.0",
+    "type": "module",
     "private": true,
     "scripts": {
         "start": "pm2 start index.ts --name the-school-of-options-backend --max-memory-restart 4144M --max-restarts 7",

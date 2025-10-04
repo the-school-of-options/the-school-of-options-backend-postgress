@@ -49,7 +49,7 @@ class Otp {
 @Check("CHK_user_fullname_len", 'char_length("fullName") <= 100')
 @Check("CHK_user_otp_attempts", '"otpAttempts" <= 5 OR "otpAttempts" IS NULL')
 @Entity({ name: "users" })
-export class User {
+export default class User {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
@@ -112,3 +112,5 @@ export class User {
     if (this.mobileNumber) this.mobileNumber = this.mobileNumber.trim();
   }
 }
+
+export { User };
