@@ -52,7 +52,7 @@ export const AWSUtils = {
   },
 
   updateTemplate: async (
-    templateConfig: typeof EMAIL_TEMPLATES.EMAIL_VERIFICATION_OTP
+    templateConfig: typeof EMAIL_TEMPLATES.EMAIL_VERIFICATION_LINK
   ) => {
     try {
       const command = new UpdateTemplateCommand({

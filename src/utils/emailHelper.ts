@@ -1,48 +1,6 @@
 import { AWSUtils } from "./aws";
 
 export class EmailService {
-  static async sendOTP(
-    email: string,
-    otp: string,
-    name: string,
-    type: "email_verification" | "password_reset",
-    expiryMinutes: number = 10
-  ) {
-    const templates = {
-      email_verification: {
-        subject: "Verify Your Email",
-        template: "EmailVerificationOTP",
-      },
-      password_reset: {
-        subject: "Reset Your Password",
-        template: "PasswordResetLink-SchoolOfOptions",
-      },
-    };
-
-    const config = templates[type];
-
-    if (!config) {
-      throw new Error(`Invalid OTP type: ${type}`);
-    }
-
-    try {
-      await AWSUtils.sendEmail(
-        "hello@theschoolofoptions.com",
-        [email],
-        config.template,
-        {
-          name,
-          otp,
-          expiryMinutes: expiryMinutes.toString(),
-        }
-      );
-      return { success: true, message: "OTP email sent successfully" };
-    } catch (error: any) {
-      console.error("Failed to send OTP email:", error);
-      return { success: false, message: "Failed to send OTP email", error };
-    }
-  }
-
   static async sendTalkToCounsellorEmail(
     name: string,
     email: string,
@@ -156,6 +114,31 @@ export class EmailService {
         message: "Failed to send Password Reset Link email",
         error,
       };
+    }
+  }
+
+  static async emailVerification(
+    email: string,
+    name: string,
+    link: string,
+    expiryMinutes: number = 60
+  ) {
+    try {
+      await AWSUtils.sendEmail(
+        "hello@theschoolofoptions.com",
+        [email],
+        "EmailVerificationLink-TheSchoolOfOptions",
+        {
+          name,
+          email,
+          link,
+          expiryMinutes: expiryMinutes.toString()
+        }
+      );
+      return true;
+    } catch (error: any) {
+      console.error("Failed to send email verification link:", error);
+      return false;
     }
   }
 }

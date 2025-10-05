@@ -7,8 +7,7 @@ import {
   verifyToken,
 } from "../utils/bcryptUtils";
 import { AppDataSource } from "../config/database";
-import { OtpType, User, UserRole } from "../entities/user.entity";
-import { OTPService } from "../utils/otp";
+import { User, UserRole } from "../entities/user.entity";
 import { EmailService } from "../utils/emailHelper";
 import { AuthRequest } from "../types/authReq.types";
 import axios from "axios";
@@ -58,17 +57,14 @@ const signUp = async (req: Request, res: Response) => {
       console.error("Failed to add user to Cognito group:", error);
     }
 
-    const otpData = OTPService.createOTPData(OtpType.EMAIL_VERIFICATION);
-    user.otp = { ...otpData, type: OtpType.EMAIL_VERIFICATION };
-    await userRepository.save(user);
+    // Create verification token and send email
+    const verificationToken = createToken(user.cognitoId!, user.email, "1h");
+    const verificationLink = `${process.env.FRONTEND_BASE_URL}/auth/verify-email?token=${verificationToken}`;
 
-  
-
-    const emailSent = await EmailService.sendOTP(
+    const emailSent = await EmailService.emailVerification(
       user.email,
-      otpData.code,
       user.fullName,
-      OtpType.EMAIL_VERIFICATION
+      verificationLink,
     );
 
     if (!emailSent) {
@@ -77,13 +73,13 @@ const signUp = async (req: Request, res: Response) => {
       });
     }
 
-    const responseUser = {};
-
     res.status(200).json({
-      message:
-        "OTP sent to your email. Please verify to complete registration.",
-      user: responseUser,
-      otpSent: true,
+      message: "Verification link sent to your email. Please verify to complete registration.",
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+      },
     });
   } catch (err: unknown) {
     console.error("Signup error:", err);
@@ -219,11 +215,172 @@ const getUserById = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Create a copy without the OTP field
-    const { otp, ...userWithoutOtp } = userInfo;
-    res.json({ user: userWithoutOtp });
+    res.json({ user: userInfo });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const verifyEmail = async (req: Request, res: Response) => {
+  const { token } = req.body;
+
+  try {
+    if (!token) {
+      return res.status(400).json({
+        error: "Verification token is required",
+      });
+    }
+
+    // Verify and decode token
+    if (!verifyToken(token)) {
+      return res.status(400).json({
+        error: "Invalid or expired verification token",
+      });
+    }
+
+    const decodedToken = decodeTokenPayload(token);
+    if (!decodedToken || !decodedToken.userId || !decodedToken.email) {
+      return res.status(400).json({
+        error: "Invalid token payload",
+      });
+    }
+
+    const user = await userRepository.findOne({
+      where: { cognitoId: decodedToken.userId },
+    });
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        error: "Email is already verified",
+      });
+    }
+
+    // Update user verification status
+    user.isVerified = true;
+    await userRepository.save(user);
+
+    // Mark email as verified in Cognito
+    await authService.verifyUserEmail(user.cognitoId!);
+
+    // Confirm user in Cognito if not already confirmed
+    try {
+      await authService.confirmSignUpWithCode(user.cognitoId!, "");
+    } catch (error: any) {
+      // Ignore errors if user is already confirmed
+      if (!error.message?.includes("already confirmed")) {
+        console.error("Error confirming user in Cognito:", error);
+      }
+    }
+
+    // Send WhatsApp message if mobile number is provided
+    if (user.mobileNumber) {
+      try {
+        const sendWhatsapp = await axios.post('https://backend.aisensy.com/campaign/t1/api/v2', {
+          apiKey: process.env.AI_SENSY_ACCESS_TOKEN!,
+          campaignName: process.env.AI_SENSY_CAMPAIGN_NAME!,
+          destination: user.mobileNumber,
+          userName: user.fullName,
+          templateParams: [],
+          source: "new-landing-page form",
+          media: {},
+          buttons: [],
+          carouselCards: [],
+          location: {},
+          attributes: {},
+          paramsFallbackValue: {}
+        });
+        console.log('WhatsApp response:', sendWhatsapp.data);
+      } catch (whatsappError) {
+        console.error('Failed to send WhatsApp message:', whatsappError);
+      }
+    }
+
+    res.json({
+      message: "Email verified successfully. You can now log in with your credentials.",
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        isVerified: user.isVerified,
+      },
+    });
+  } catch (error) {
+    console.error("Email verification error:", error);
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({
+        error: "An error occurred during verification",
+      });
+    }
+  }
+};
+
+const resendVerificationCode = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  try {
+    if (!email) {
+      return res.status(400).json({
+        error: "Email is required",
+      });
+    }
+
+    const user = await userRepository.findOne({
+      where: { email: email.toLowerCase() },
+    });
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        error: "Email is already verified",
+      });
+    }
+
+    if (!user.cognitoId) {
+      return res.status(500).json({
+        error: "User does not have a valid Cognito ID",
+      });
+    }
+
+    // Create new verification token and send email
+    const verificationToken = createToken(user.cognitoId, user.email, "1h");
+    const verificationLink = `${process.env.FRONTEND_BASE_URL}/auth/verify-email?token=${verificationToken}`;
+
+    const emailSent = await EmailService.emailVerification(
+      user.email,
+      user.fullName,
+      verificationLink,
+    );
+
+    if (!emailSent) {
+      return res.status(500).json({
+        error: "Failed to send verification email. Please try again.",
+      });
+    }
+
+    res.json({
+      message: "Verification link resent successfully",
+    });
+  } catch (error) {
+    console.error("Resend verification link error:", error);
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({
+        error: "An error occurred while resending verification link",
+      });
+    }
   }
 };
 
@@ -233,4 +390,6 @@ export const authController = {
   forgotPassword,
   resetPassword,
   getUserById,
+  verifyEmail,
+  resendVerificationCode,
 };

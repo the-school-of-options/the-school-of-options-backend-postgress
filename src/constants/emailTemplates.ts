@@ -1,6 +1,6 @@
 export const EMAIL_TEMPLATES = {
-  EMAIL_VERIFICATION_OTP: {
-    TemplateName: "EmailVerificationOTP",
+  EMAIL_VERIFICATION_LINK: {
+    TemplateName: "EmailVerificationLink-TheSchoolOfOptions",
     SubjectPart: "Verify Your The School of Options Account",
     HtmlPart: `
 <!DOCTYPE html>
@@ -10,116 +10,108 @@ export const EMAIL_TEMPLATES = {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Your Email</title>
     <style>
-        body { 
-            margin: 0; 
-            padding: 0; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
             box-sizing: border-box;
         }
-        .email-container { 
-            max-width: 600px; 
-            margin: 0 auto; 
-            background: white; 
-            border-radius: 16px; 
-            overflow: hidden; 
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
-        .header { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            color: #000000; 
-            padding: 40px 20px; 
-            text-align: center; 
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #000000;
+            padding: 40px 20px;
+            text-align: center;
         }
-        .header h1 { 
-            margin: 0; 
-            font-size: 32px; 
-            font-weight: 300; 
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 300;
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
-        .header .icon { 
-            font-size: 48px; 
-            margin-bottom: 10px; 
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
         }
-        .content { 
-            padding: 40px 30px; 
+        .content {
+            padding: 40px 30px;
             line-height: 1.6;
         }
-        .greeting { 
-            font-size: 20px; 
-            color: #333; 
-            margin-bottom: 20px; 
+        .greeting {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
             font-weight: 500;
         }
-        .otp-section { 
-            text-align: center; 
-            margin: 35px 0; 
+        .cta-section {
+            text-align: center;
+            margin: 35px 0;
             padding: 20px;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             border-radius: 12px;
         }
-        .otp-label {
-            color: #00000;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-        }
-        .otp-code { 
+        .cta-button {
             display: inline-block;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #000000;
-            padding: 20px 40px;
-            border-radius: 12px;
-            font-size: 36px;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 18px;
             font-weight: bold;
-            letter-spacing: 6px;
+            text-decoration: none;
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-            margin: 10px 0;
+            transition: transform 0.2s;
         }
-        .info-box { 
-            background: #fff3cd; 
-            border-left: 4px solid #ffc107; 
-            padding: 20px; 
-            border-radius: 8px; 
-            margin: 25px 0; 
+        .cta-button:hover {
+            transform: translateY(-2px);
         }
-        .info-title { 
-            color: #856404; 
-            font-weight: bold; 
+        .info-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+        .info-title {
+            color: #856404;
+            font-weight: bold;
             margin-bottom: 12px;
             font-size: 16px;
         }
-        .info-list { 
-            margin: 0; 
-            padding-left: 20px; 
+        .info-list {
+            margin: 0;
+            padding-left: 20px;
             color: #856404;
         }
-        .info-list li { 
-            margin: 8px 0; 
-        }
-        .cta-section {
-            text-align: center;
-            margin: 30px 0;
+        .info-list li {
+            margin: 8px 0;
         }
         .welcome-text {
             color: #000000;
             font-size: 16px;
             margin: 20px 0;
         }
-        .footer { 
-            text-align: center; 
-            padding: 30px 20px; 
-            color: #6c757d; 
-            font-size: 14px; 
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: #6c757d;
+            font-size: 14px;
             border-top: 1px solid #e9ecef;
             background: #f8f9fa;
         }
-        .brand { 
-            color: #667eea; 
-            font-weight: bold; 
+        .brand {
+            color: #667eea;
+            font-weight: bold;
             font-size: 18px;
         }
         .social-links {
@@ -140,43 +132,49 @@ export const EMAIL_TEMPLATES = {
             <h1>The School of Options</h1>
             <p style="margin: 10px 0 0 0; opacity: 0.9;">Your Learning Journey Starts Here</p>
         </div>
-        
+
         <div class="content">
             <div class="greeting">Hello {{name}}!</div>
-            
+
             <p class="welcome-text">
-                Welcome to <strong>The School of Options</strong>! We're excited to have you join our community. 
+                Welcome to <strong>The School of Options</strong>! We're excited to have you join our community.
                 To complete your registration and unlock access to our programs, please verify your email address.
             </p>
-            
-            <div class="otp-section">
-                <div class="otp-label">Your Verification Code</div>
-                <div class="otp-code">{{otp}}</div>
-                <p style="margin: 15px 0 0 0; color: #6c757d; font-size: 14px;">
-                    Enter this code in the verification form
+
+            <div class="cta-section">
+                <a href="{{link}}" class="cta-button">Verify Email Address</a>
+                <p style="margin: 20px 0 0 0; color: #6c757d; font-size: 14px;">
+                    This link will expire in <strong>{{expiryMinutes}} minutes</strong> for security reasons.
                 </p>
             </div>
-            
+
+            <p>
+                If the button above does not work, you can copy and paste the following link into your web browser:
+            </p>
+            <p style="word-break: break-all; font-size: 13px; color: #667eea;">
+                {{link}}
+            </p>
+
             <div class="info-box">
                 <div class="info-title">⏰ Important Security Information</div>
                 <ul class="info-list">
-                    <li>This verification code expires in <strong>{{expiryMinutes}} minutes</strong></li>
-                    <li>You have <strong>5 attempts</strong> to enter the correct code</li>
-                    <li>Keep this code private and never share it with anyone</li>
+                    <li>This verification link expires in <strong>{{expiryMinutes}} minutes</strong></li>
+                    <li>Keep this link private and never share it with anyone</li>
                     <li>If you didn't create this account, please ignore this email</li>
+                    <li>Need a new link? Click "Resend Verification Email" in the app</li>
                 </ul>
             </div>
-            
+
             <p style="color: #495057; margin-top: 30px;">
                 Best regards,<br>
-                <span class="brand">The The School of Options Team</span>
+                <span class="brand">The School of Options Team</span>
             </p>
         </div>
-        
+
         <div class="footer">
             <div class="social-links">
                 <a href="https://www.theschoolofoptions.com">🌐 Website</a>
-                <a href="mailto:support@schoolofoptions.com">✉️ Support</a>
+                <a href="mailto:hello@theschoolofoptions.com">✉️ Support</a>
             </div>
             <p>This is an automated message, please do not reply to this email.</p>
             <p>&copy; 2025 The School of Options. All rights reserved.</p>
@@ -189,16 +187,17 @@ Hello {{name}}!
 
 Welcome to The School of Options! To complete your registration, please verify your email address.
 
-Your verification code: {{otp}}
+Click the link below to verify:
+{{link}}
 
 Important Information:
-- This code expires in {{expiryMinutes}} minutes
-- You have 5 attempts to enter the correct code
-- Keep this code private
+- This link expires in {{expiryMinutes}} minutes
+- Keep this link private
 - If you didn't create this account, please ignore this email
+- Need a new link? Click "Resend Verification Email" in the app
 
 Best regards,
-The The School of Options Team
+The School of Options Team
 
 This is an automated message, please do not reply.
 © 2025 The School of Options. All rights reserved.

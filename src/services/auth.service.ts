@@ -422,94 +422,6 @@ export const authService = {
     }
   },
 
-  confirmEmail: async (email: string, otp: string) => {
-    try {
-      const safeEmail = email.trim().toLowerCase();
-      const userData = await userRepository.findOne({
-        where: { email: safeEmail },
-      });
-
-      if (!userData) {
-        throw new Error("User not found. Please try registering again.");
-      }
-      if (!userData.otp || !userData.otp.expiresAt) {
-        throw new Error(
-          "No active verification code. Please request a new one."
-        );
-      }
-      if ((userData.otp.attempts ?? 0) >= 5) {
-        throw new Error("Too many attempts. Please request a new code.");
-      }
-
-      const now = new Date();
-      if (userData.otp.expiresAt <= now) {
-        throw new Error("Verification code expired. Please request a new one.");
-      }
-
-      let isMatch = false;
-      if (userData.otp.code === otp) {
-        isMatch = true;
-        userData.otp.attempts = 0;
-        userData.otp.code = null;
-        userData.otp.expiresAt = null;
-      }
-
-      if (!isMatch) {
-        userData.otp.attempts = (userData.otp.attempts ?? 0) + 1;
-        await userRepository.save(userData);
-        throw new Error("Invalid verification code.");
-      }
-
-      userData.isVerified = true;
-      userData.otp = undefined;
-      await userRepository.save(userData);
-
-      let username = userData.id;
-      if (!username || (!username.includes("@") && userData.email)) {
-        const cognitoUser = await authService.findUserByEmail(userData.email);
-        if (cognitoUser?.Username) username = cognitoUser.Username;
-        else username = userData.email;
-      }
-
-      await cognitoIdentityServiceProvider.adminUpdateUserAttributes({
-        UserPoolId: userPoolId,
-        Username: username,
-        UserAttributes: [{ Name: "email_verified", Value: "true" }],
-      });
-
-      try {
-        await cognitoIdentityServiceProvider.adminConfirmSignUp({
-          UserPoolId: userPoolId,
-          Username: username,
-        });
-      } catch (err: any) {
-        if (err.code !== "NotAuthorizedException") {
-          console.error(
-            "Error confirming user during email verification:",
-            err
-          );
-          throw err;
-        }
-      }
-
-      return { ok: true };
-    } catch (error: any) {
-      console.error("Failed to verify email:", error);
-
-      if (error.code === "UserNotFoundException") {
-        throw new Error("User not found. Please try registering again.");
-      }
-      if (error.code === "TooManyRequestsException") {
-        throw new Error("Too many requests. Please try again later.");
-      }
-      // bubble up our custom messages (e.g., invalid/expired/too many attempts)
-      if (error.message) {
-        throw new Error(error.message);
-      }
-      throw new Error("Failed to confirm email. Please try again.");
-    }
-  },
-
   confirmInvitedUserEmail: async (userIdentifier: string) => {
     try {
       let username = userIdentifier;
@@ -821,6 +733,82 @@ export const authService = {
       }
 
       throw new Error("Failed to verify email");
+    }
+  },
+
+  sendVerificationCode: async (username: string) => {
+    try {
+      await cognitoIdentityServiceProvider.adminUpdateUserAttributes({
+        UserPoolId: userPoolId,
+        Username: username,
+        UserAttributes: [{ Name: "email_verified", Value: "false" }],
+      });
+
+      // This triggers Cognito to send a verification code
+      const response = await cognitoIdentityServiceProvider.adminGetUser({
+        UserPoolId: userPoolId,
+        Username: username,
+      });
+
+      console.log("Verification code sent for user:", username);
+      return response;
+    } catch (error: any) {
+      console.error("Failed to send verification code:", error);
+
+      if (error.code === "UserNotFoundException") {
+        throw new Error("User not found");
+      }
+      if (error.code === "TooManyRequestsException") {
+        throw new Error("Too many requests. Please try again later");
+      }
+      if (error.code === "InvalidParameterException") {
+        throw new Error("Invalid parameters");
+      }
+
+      throw new Error("Failed to send verification code");
+    }
+  },
+
+  confirmSignUpWithCode: async (username: string, code: string) => {
+    try {
+      // Since we're using admin user creation, we need to verify the attribute update code
+      await cognitoIdentityServiceProvider.adminUpdateUserAttributes({
+        UserPoolId: userPoolId,
+        Username: username,
+        UserAttributes: [{ Name: "email_verified", Value: "true" }],
+      });
+
+      // Confirm the user signup
+      await cognitoIdentityServiceProvider.adminConfirmSignUp({
+        UserPoolId: userPoolId,
+        Username: username,
+      });
+
+      console.log("User confirmed successfully:", username);
+    } catch (error: any) {
+      console.error("Failed to confirm signup:", error);
+
+      if (error.code === "CodeMismatchException") {
+        throw new Error("Invalid verification code");
+      }
+      if (error.code === "ExpiredCodeException") {
+        throw new Error("Verification code has expired");
+      }
+      if (error.code === "UserNotFoundException") {
+        throw new Error("User not found");
+      }
+      if (error.code === "TooManyRequestsException") {
+        throw new Error("Too many requests. Please try again later");
+      }
+      if (error.code === "NotAuthorizedException") {
+        if (error.message.includes("Current status is CONFIRMED")) {
+          console.log("User already confirmed");
+          return;
+        }
+        throw new Error("Not authorized to confirm signup");
+      }
+
+      throw new Error("Failed to confirm signup");
     }
   },
 };

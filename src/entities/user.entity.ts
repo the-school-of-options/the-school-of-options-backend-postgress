@@ -15,39 +15,7 @@ export enum UserRole {
   USER = "User",
 }
 
-export enum OtpType {
-  EMAIL_VERIFICATION = "email_verification",
-  PASSWORD_RESET = "password_reset",
-  LOGIN = "login",
-}
-
-class Otp {
-  @Column({ type: "varchar", length: 64, nullable: true })
-  code?: string | null;
-
-  @Column({ type: "timestamptz", nullable: true })
-  expiresAt?: Date | null;
-
-  @Column({ type: "smallint", default: 0, nullable: true })
-  attempts?: number | null;
-
-  @Column({ type: "timestamptz", nullable: true })
-  lastSentAt?: Date | null;
-
-  @Column({ type: "boolean", default: false, nullable: true })
-  verified?: boolean | null;
-
-  @Column({
-    type: "enum",
-    enum: OtpType,
-    enumName: "otp_type_enum",
-    nullable: true,
-  })
-  type?: OtpType | null;
-}
-
 @Check("CHK_user_fullname_len", 'char_length("fullName") <= 100')
-@Check("CHK_user_otp_attempts", '"otpAttempts" <= 5 OR "otpAttempts" IS NULL')
 @Entity({ name: "users" })
 export default class User {
   @PrimaryGeneratedColumn("uuid")
@@ -82,9 +50,6 @@ export default class User {
     default: UserRole.USER,
   })
   role!: UserRole;
-
-  @Column(() => Otp, { prefix: "otp" })
-  otp?: Otp;
 
   @Column({ type: "boolean", default: false })
   isVerified!: boolean;
