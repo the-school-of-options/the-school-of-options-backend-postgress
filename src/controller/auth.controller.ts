@@ -79,6 +79,70 @@ const signUp = async (req: Request, res: Response) => {
         id: user.id,
         email: user.email,
         fullName: user.fullName,
+        mobileNumber: user.mobileNumber,
+      },
+    });
+  } catch (err: unknown) {
+    console.error("Signup error:", err);
+    if (err instanceof Error) {
+      res.status(400).json({ error: err.message });
+    } else {
+      res.status(500).json({ error: "An unexpected error occurred during signup" });
+    }
+  }
+};
+
+const signUpWithoutVerify = async (req: Request, res: Response) => {
+  const { email, password, fullName, mobileNumber, role } = req.body;
+
+  try {
+    if (!email || !password || !fullName) {
+      return res.status(400).json({
+        error: "Email, password, and full name are required",
+      });
+    }
+
+    const existingUser = await userService.getUserByEmail(email);
+    if(existingUser){
+      return res.status(400).json({ error: "Email is already registered. Please log in." });
+    }
+    const cognitoUserId = await authService.createUserInCognitoWithoutVerify(
+      email,
+      password
+    );
+
+    const userRole = role && role === UserRole.SUPER_ADMIN ? UserRole.SUPER_ADMIN : UserRole.USER;
+
+    const userData: Partial<User> = {
+      fullName: fullName.trim(),
+      email: email.toLowerCase().trim(),
+      mobileNumber: mobileNumber ? mobileNumber.trim() : null,
+      cognitoId: cognitoUserId,
+      role: userRole,
+      isVerified: true,
+      isActive: true,
+      loginCount: 0,
+    };
+
+
+    const user = await userService.createUserData(userData);
+
+    // Add user to Cognito group
+    try {
+      await authService.addUserToCognitoGroup(cognitoUserId, userRole);
+    } catch (error) {
+      console.error("Failed to add user to Cognito group:", error);
+    }
+
+
+
+    res.status(200).json({
+      message: "Verification link sent to your email. Please verify to complete registration.",
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        mobileNumber: user.mobileNumber,
       },
     });
   } catch (err: unknown) {
@@ -127,6 +191,7 @@ const login = async (req: Request, res: Response) => {
         email: userInfo?.email,
         fullName: userInfo?.fullName,
         role: userInfo?.role,
+        mobileNumber: userInfo?.mobileNumber, 
         isVerified: userInfo?.isVerified,
       },
       username: decodedToken?.username,
@@ -392,4 +457,5 @@ export const authController = {
   getUserById,
   verifyEmail,
   resendVerificationCode,
+  signUpWithoutVerify
 };

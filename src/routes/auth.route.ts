@@ -6,6 +6,7 @@ import { authController } from "../controller/auth.controller";
 const authRouter = Router();
 
 authRouter.post("/signup", authController.signUp);
+authRouter.post("/signup-without-verify", authController.signUpWithoutVerify);
 authRouter.post("/login", authController.login);
 authRouter.post("/verify-email", authController.verifyEmail);
 authRouter.post("/resend-verification", authController.resendVerificationCode);
